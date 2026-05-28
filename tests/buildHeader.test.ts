@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import * as assert from "node:assert/strict";
-import { buildHeader, CommentSyntax, DEFAULT_CONFIG, HeaderTemplateData } from "../src/formatting";
+import { buildHeader, buildHeaderLine, replaceTemplateTokens, CommentSyntax, DEFAULT_CONFIG, HeaderTemplateData } from "../src/formatting";
 
 const cStyleSyntax: CommentSyntax = {
   singleLineStart: "//",
@@ -34,10 +34,13 @@ describe("buildHeader", () => {
 
     assert.strictEqual(lines.length, 7);
     assert.strictEqual(lines[0].length, 80);
-    assert.strictEqual(lines[0], "// " + "-".repeat(77));
-    assert.match(lines[1], /File\s+: feature\.ts\s*$/);
-    assert.match(lines[2], /Project\s+: saturno-project\s*$/);
-    assert.match(lines[5], /Mateus <mateus@saturno\.software>\s*$/);
+    assert.strictEqual(lines[0], `// ${"-".repeat(74)} //`);
+    assert.ok(lines[1].endsWith(" //"));
+    assert.ok(lines[2].endsWith(" //"));
+    assert.ok(lines[5].endsWith(" //"));
+    assert.match(lines[1], /File\s+: feature\.ts\s+\/\/$/);
+    assert.match(lines[2], /Project\s+: saturno-project\s+\/\/$/);
+    assert.match(lines[5], /Mateus <mateus@saturno\.software>\s+\/\/$/);
     assert.strictEqual(lines[6], lines[0]);
   });
 
@@ -51,10 +54,10 @@ describe("buildHeader", () => {
     const lines = result.trimEnd().split("\n");
 
     assert.strictEqual(lines.length, 4);
-    assert.strictEqual(lines[0], "// " + "=".repeat(57));
+    assert.strictEqual(lines[0], `// ${"=".repeat(54)} //`);
     assert.strictEqual(lines[0].length, 60);
-    assert.match(lines[1], /Header : feature\.ts\s*$/);
-    assert.match(lines[2], /Author : Mateus\s*$/);
+    assert.match(lines[1], /Header : feature\.ts\s+\/\/$/);
+    assert.match(lines[2], /Author : Mateus\s+\/\/$/);
   });
 
   it("supports languages that require a closing single-line suffix", () => {
@@ -65,5 +68,82 @@ describe("buildHeader", () => {
     assert.ok(lines[0].endsWith(" -->"));
     assert.ok(lines[1].endsWith(" -->"));
     assert.strictEqual(lines[0].length, 80);
+  });
+
+  it("replaces wrapped placeholder tokens inside template lines", () => {
+    const result = buildHeader(cStyleSyntax, sampleData, {
+      ...DEFAULT_CONFIG,
+      templateLines: [
+        "  File      : ${FILENAME}",
+        "  Project   : {{PROJECT}}",
+        "  Date      : DATE",
+      ],
+    });
+    const lines = result.trimEnd().split("\n");
+
+    assert.ok(lines[1].includes("feature.ts"));
+    assert.ok(!lines[1].includes("${"));
+    assert.ok(lines[2].includes("saturno-project"));
+    assert.ok(!lines[2].includes("{{"));
+    assert.ok(lines[3].includes("2026-05-28"));
+  });
+
+  it("preserves ascii-art template lines while closing them on the right side", () => {
+    const result = buildHeader(cStyleSyntax, sampleData, {
+      ...DEFAULT_CONFIG,
+      templateLines: [
+        "                     *       +",
+        "               '                  |",
+      ],
+    });
+    const lines = result.trimEnd().split("\n");
+
+    assert.strictEqual(lines[1].length, 80);
+    assert.strictEqual(lines[2].length, 80);
+    assert.ok(lines[1].startsWith("// "));
+    assert.ok(lines[1].endsWith(" //"));
+    assert.ok(lines[2].endsWith(" //"));
+  });
+});
+
+describe("buildHeaderLine", () => {
+  it("closes line-comment headers on the right side", () => {
+    const result = buildHeaderLine(cStyleSyntax, "  File      : feature.ts", " ", 80);
+    assert.strictEqual(result.length, 80);
+    assert.ok(result.startsWith("// "));
+    assert.ok(result.endsWith(" //"));
+  });
+
+  it("uses the explicit single-line end when available", () => {
+    const result = buildHeaderLine(htmlStyleSyntax, "Title", " ", 60);
+    assert.strictEqual(result.length, 60);
+    assert.ok(result.startsWith("<!-- "));
+    assert.ok(result.endsWith(" -->"));
+  });
+});
+
+describe("replaceTemplateTokens", () => {
+  it("replaces raw, ${wrapped}, and {{wrapped}} placeholder tokens", () => {
+    const result = replaceTemplateTokens(
+      "FILENAME | ${PROJECT} | {{DATE}} | YEAR | USER_NAME | ${USER_EMAIL}",
+      sampleData
+    );
+
+    assert.strictEqual(
+      result,
+      "feature.ts | saturno-project | 2026-05-28 | 2024 - 2026 | Mateus | mateus@saturno.software"
+    );
+  });
+
+  it("does not leave ${...} markers behind after replacement", () => {
+    const result = replaceTemplateTokens(
+      "  File      : ${FILENAME}\n  Project   : ${PROJECT}\n  Author    : ${USER_NAME} <${USER_EMAIL}>",
+      sampleData
+    );
+
+    assert.ok(!result.includes("${"));
+    assert.ok(result.includes("feature.ts"));
+    assert.ok(result.includes("saturno-project"));
+    assert.ok(result.includes("Mateus <mateus@saturno.software>"));
   });
 });

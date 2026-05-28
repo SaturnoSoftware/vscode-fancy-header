@@ -64,10 +64,10 @@ export function buildHeader(
   config: HeaderConfig = DEFAULT_CONFIG
 ): string {
   const normalized = normalizeConfig(config);
-  const edgeLine = buildCommentLine(syntax, "", normalized.fillChar, normalized.lineWidth);
+  const edgeLine = buildHeaderLine(syntax, "", normalized.fillChar, normalized.lineWidth);
   const contentLines = normalized.templateLines.map((line) => {
     const replaced = replaceTemplateTokens(line, data);
-    return buildCommentLine(syntax, replaced, " ", normalized.lineWidth);
+    return buildHeaderLine(syntax, replaced, " ", normalized.lineWidth);
   });
 
   return [edgeLine, ...contentLines, edgeLine].join("\n") + "\n\n";
@@ -141,20 +141,21 @@ function normalizeNamedTemplates(templates: NamedHeaderTemplate[] | undefined): 
 }
 
 // -----------------------------------------------------------------------------
-function buildCommentLine(
+export function buildHeaderLine(
   syntax: CommentSyntax,
   text: string,
   fillChar: string,
   lineWidth: number
 ): string {
   const prefix = `${syntax.singleLineStart} `;
-  const suffix = syntax.singleLineEnd ? ` ${syntax.singleLineEnd}` : "";
+  const suffixToken = syntax.singleLineEnd || syntax.singleLineStart;
+  const suffix = ` ${suffixToken}`;
   const fillLength = Math.max(0, lineWidth - prefix.length - text.length - suffix.length);
   return prefix + text + fillChar.repeat(fillLength) + suffix;
 }
 
 // -----------------------------------------------------------------------------
-function replaceTemplateTokens(line: string, data: HeaderTemplateData): string {
+export function replaceTemplateTokens(line: string, data: HeaderTemplateData): string {
   const replacements: Record<string, string> = {
     FILENAME: data.fileName,
     PROJECT: data.projectName,
@@ -167,9 +168,9 @@ function replaceTemplateTokens(line: string, data: HeaderTemplateData): string {
   let result = line;
   for (const [token, value] of Object.entries(replacements)) {
     result = result
-      .replaceAll(token, value)
       .replaceAll(`\${${token}}`, value)
-      .replaceAll(`{{${token}}}`, value);
+      .replaceAll(`{{${token}}}`, value)
+      .replaceAll(token, value);
   }
 
   return result;
