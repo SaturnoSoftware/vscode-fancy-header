@@ -5,7 +5,14 @@ import { getActiveEditor, getActiveFilePath, showError } from "../libs/Saturno.V
 import { getCommentSyntaxForEditor } from "./commentSyntax";
 import { DEFAULT_CONFIG, HeaderConfig, NamedHeaderTemplate, normalizeConfig, buildHeader } from "./formatting";
 import { getDefaultUserTemplateRoot, resolveConfiguredTemplateLines, resolveTemplateData } from "./runtime";
-import { buildNewTemplateContent, buildUpdatedTemplateList, getEditableTemplateCandidates, resolveUniqueTemplatePath } from "./templateManagement";
+import {
+  buildNewTemplateContent,
+  buildUpdatedTemplateList,
+  getEditableTemplateCandidates,
+  getTemplateSearchDirectories,
+  mergeTemplateSources,
+  resolveUniqueTemplatePath,
+} from "./templateManagement";
 
 const CONFIG_SECTION = "saturno-fancy-header";
 
@@ -72,7 +79,8 @@ async function executeAddHeader(): Promise<void> {
 
   const config = getConfig();
   const workspaceFolderPath = vscode.workspace.getWorkspaceFolder(editor.document.uri)?.uri.fsPath ?? null;
-  const selectedTemplate = await chooseNamedTemplate(config.templates);
+  const availableTemplates = getAvailableTemplates(config);
+  const selectedTemplate = await chooseNamedTemplate(availableTemplates);
   if (selectedTemplate === undefined) {
     return;
   }
@@ -144,7 +152,7 @@ async function executeNewTemplate(): Promise<void> {
     (candidatePath) => fs.existsSync(candidatePath)
   );
 
-  const sourceTemplatePath = getEditableTemplateCandidates(config)[0]?.path;
+  const sourceTemplatePath = getAvailableTemplates(config)[0]?.path;
   const sourceContents = tryReadTextFile(sourceTemplatePath);
   const contents = buildNewTemplateContent(config, sourceContents);
 
@@ -166,7 +174,7 @@ async function executeNewTemplate(): Promise<void> {
 // -----------------------------------------------------------------------------
 async function executeEditTemplates(): Promise<void> {
   const config = getConfig();
-  const candidates = getEditableTemplateCandidates(config);
+  const candidates = getAvailableTemplates(config);
 
   if (candidates.length === 0) {
     await vscode.commands.executeCommand("workbench.action.openSettingsJson");
@@ -216,4 +224,38 @@ function tryReadTextFile(filePath: string | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+// -----------------------------------------------------------------------------
+function getAvailableTemplates(config: HeaderConfig): NamedHeaderTemplate[] {
+  const templateRoot = getDefaultUserTemplateRoot();
+  const configuredCandidates = getEditableTemplateCandidates(config);
+  const discoveredPaths = discoverTemplateFiles(getTemplateSearchDirectories(config, templateRoot));
+  return mergeTemplateSources(configuredCandidates, discoveredPaths);
+}
+
+// -----------------------------------------------------------------------------
+function discoverTemplateFiles(directories: string[]): string[] {
+  const discovered: string[] = [];
+
+  for (const directory of directories) {
+    try {
+      const entries = fs.readdirSync(directory, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isFile()) {
+          continue;
+        }
+
+        if (!/^_header-.*\.txt$/i.test(entry.name)) {
+          continue;
+        }
+
+        discovered.push(path.join(directory, entry.name));
+      }
+    } catch {
+      // Missing directories are fine; discovery is best-effort.
+    }
+  }
+
+  return discovered.sort((a, b) => a.localeCompare(b));
 }

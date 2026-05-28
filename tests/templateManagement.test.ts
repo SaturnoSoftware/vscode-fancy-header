@@ -5,8 +5,11 @@ import {
   buildNewTemplateContent,
   buildTemplateFileName,
   buildUpdatedTemplateList,
+  deriveTemplateNameFromFilePath,
   getEditableTemplateCandidates,
   getPreferredTemplateDirectory,
+  getTemplateSearchDirectories,
+  mergeTemplateSources,
   resolveUniqueTemplatePath,
   slugifyTemplateName,
 } from "../src/templateManagement";
@@ -51,6 +54,22 @@ describe("templateManagement", () => {
     assert.strictEqual(result, "D:\\Templates\\_header-ascii-galaxy-3.txt");
   });
 
+  it("builds the template search directories from configured paths plus the default root", () => {
+    const result = getTemplateSearchDirectories(
+      {
+        ...DEFAULT_CONFIG,
+        templates: [{ name: "Default", path: "D:\\Templates\\_header-default.txt" }],
+        templateFile: "D:\\Templates\\_header-default.txt",
+      },
+      "D:\\UserTemplates"
+    );
+
+    assert.deepStrictEqual(result, [
+      "D:\\Templates",
+      "D:\\UserTemplates",
+    ]);
+  });
+
   it("returns editable candidates from templates or templateFile fallback", () => {
     assert.deepStrictEqual(
       getEditableTemplateCandidates({
@@ -67,6 +86,32 @@ describe("templateManagement", () => {
       }),
       [{ name: "Current Template", path: "D:\\Templates\\_header-default.txt" }]
     );
+  });
+
+  it("derives friendly names from discovered template files", () => {
+    assert.strictEqual(
+      deriveTemplateNameFromFilePath("D:\\Templates\\_header-ascii-galaxy.txt"),
+      "Ascii Galaxy"
+    );
+    assert.strictEqual(
+      deriveTemplateNameFromFilePath("D:\\Templates\\_header.txt"),
+      "Template"
+    );
+  });
+
+  it("merges configured templates with discovered files without duplicates", () => {
+    const result = mergeTemplateSources(
+      [{ name: "Default", path: "D:\\Templates\\_header-default.txt" }],
+      [
+        "D:\\Templates\\_header-default.txt",
+        "D:\\Templates\\_header-galaxy.txt",
+      ]
+    );
+
+    assert.deepStrictEqual(result, [
+      { name: "Default", path: "D:\\Templates\\_header-default.txt" },
+      { name: "Galaxy", path: "D:\\Templates\\_header-galaxy.txt" },
+    ]);
   });
 
   it("builds new template content from an existing template or templateLines fallback", () => {
