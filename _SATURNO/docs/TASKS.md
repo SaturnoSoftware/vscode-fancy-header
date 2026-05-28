@@ -4,7 +4,7 @@
 
 - Keep Saturno FancyHeader aligned with the FancyComments repo contract
 - Expand tests whenever header behavior or config handling changes
-- Keep `templateLines` and `templateFile` behavior documented and covered by tests
+- Keep `templateLines`, `templateFile`, and named template picker behavior documented and covered by tests
 
 ## Done
 

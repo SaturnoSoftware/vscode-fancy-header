@@ -57,6 +57,16 @@ All settings are available in VS Code Settings UI under **Saturno FancyHeader**,
   "saturno-fancy-header.lineWidth": 80,
   "saturno-fancy-header.fillChar": "-",
   "saturno-fancy-header.templateFile": "${workspaceFolder}\\_header-template.txt",
+  "saturno-fancy-header.templates": [
+    {
+      "name": "Default",
+      "path": "${workspaceFolder}\\_header-template.txt"
+    },
+    {
+      "name": "Stars",
+      "path": "${workspaceFolder}\\_header-stars.txt"
+    }
+  ],
   "saturno-fancy-header.authorName": "",
   "saturno-fancy-header.authorEmail": "",
   "saturno-fancy-header.templateLines": [
@@ -74,6 +84,7 @@ All settings are available in VS Code Settings UI under **Saturno FancyHeader**,
 | `lineWidth` | `80` | Total width of generated header lines |
 | `fillChar` | `"-"` | Border fill character |
 | `templateFile` | `""` | Optional editable text file used as the template body |
+| `templates` | `[]` | Optional named template files shown in a picker |
 | `authorName` | `""` | Optional author name override |
 | `authorEmail` | `""` | Optional author email override |
 | `templateLines` | default list | Header body lines with placeholders |
@@ -124,6 +135,31 @@ Then point the extension to it in `settings.json`:
 ```
 
 When `templateFile` is set, it overrides `templateLines`.
+
+### Multiple Templates With A Picker
+
+If you want more than one template, configure `templates`:
+
+```json
+{
+  "saturno-fancy-header.templates": [
+    {
+      "name": "Default",
+      "path": "${workspaceFolder}\\_header-template.txt"
+    },
+    {
+      "name": "ASCII Galaxy",
+      "path": "${workspaceFolder}\\_header-galaxy.txt"
+    },
+    {
+      "name": "Minimal",
+      "path": "${workspaceFolder}\\_header-minimal.txt"
+    }
+  ]
+}
+```
+
+Then run **`Saturno: Add Header`**. If more than one named template exists, the command opens a Quick Pick so you can choose the template before the header is inserted.
 
 ---
 

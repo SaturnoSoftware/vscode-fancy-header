@@ -11,11 +11,17 @@ export interface HeaderTemplateData {
   userEmail: string;
 }
 
+export interface NamedHeaderTemplate {
+  name: string;
+  path: string;
+}
+
 export interface HeaderConfig {
   lineWidth: number;
   fillChar: string;
   templateLines: string[];
   templateFile: string;
+  templates: NamedHeaderTemplate[];
   authorName: string;
   authorEmail: string;
 }
@@ -33,6 +39,7 @@ export const DEFAULT_CONFIG: HeaderConfig = {
   fillChar: "-",
   templateLines: DEFAULT_TEMPLATE_LINES,
   templateFile: "",
+  templates: [],
   authorName: "",
   authorEmail: "",
 };
@@ -44,6 +51,7 @@ export function normalizeConfig(config: Partial<HeaderConfig> = {}): HeaderConfi
     fillChar: normalizeFillChar(config.fillChar),
     templateLines: normalizeTemplateLines(config.templateLines),
     templateFile: (config.templateFile ?? DEFAULT_CONFIG.templateFile).trim(),
+    templates: normalizeNamedTemplates(config.templates),
     authorName: (config.authorName ?? DEFAULT_CONFIG.authorName).trim(),
     authorEmail: (config.authorEmail ?? DEFAULT_CONFIG.authorEmail).trim(),
   };
@@ -112,6 +120,24 @@ function normalizeTemplateLines(templateLines: string[] | undefined): string[] {
   return templateLines
     .filter((line): line is string => typeof line === "string")
     .map((line) => line.replace(/\r/g, ""));
+}
+
+// -----------------------------------------------------------------------------
+function normalizeNamedTemplates(templates: NamedHeaderTemplate[] | undefined): NamedHeaderTemplate[] {
+  if (!Array.isArray(templates)) {
+    return [];
+  }
+
+  return templates
+    .filter((entry): entry is NamedHeaderTemplate =>
+      typeof entry?.name === "string" &&
+      typeof entry?.path === "string"
+    )
+    .map((entry) => ({
+      name: entry.name.trim(),
+      path: entry.path.trim(),
+    }))
+    .filter((entry) => entry.name.length > 0 && entry.path.length > 0);
 }
 
 // -----------------------------------------------------------------------------

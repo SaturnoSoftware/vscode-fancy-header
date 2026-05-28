@@ -9,6 +9,10 @@ describe("normalizeConfig", () => {
       fillChar: "=",
       templateLines: ["One", "Two"],
       templateFile: "  ${workspaceFolder}\\header.txt  ",
+      templates: [
+        { name: "  Default  ", path: "  ${workspaceFolder}\\default.txt  " },
+        { name: "", path: "ignored.txt" },
+      ],
       authorName: "  Mateus  ",
       authorEmail: "  hello@saturno.software  ",
     });
@@ -17,6 +21,9 @@ describe("normalizeConfig", () => {
     assert.strictEqual(result.fillChar, "=");
     assert.deepStrictEqual(result.templateLines, ["One", "Two"]);
     assert.strictEqual(result.templateFile, "${workspaceFolder}\\header.txt");
+    assert.deepStrictEqual(result.templates, [
+      { name: "Default", path: "${workspaceFolder}\\default.txt" },
+    ]);
     assert.strictEqual(result.authorName, "Mateus");
     assert.strictEqual(result.authorEmail, "hello@saturno.software");
   });
