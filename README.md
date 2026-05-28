@@ -26,6 +26,11 @@ code --install-extension saturno-fancy-header-1.1.0.vsix
 2. Open Command Palette (`Ctrl+Shift+P`)
 3. Run `Saturno: Add Header`
 
+Template management commands:
+
+- `Saturno: New Header Template`
+- `Saturno: Edit Header Templates`
+
 **Default output:**
 ```text
 // ------------------------------------------------------------------------------
@@ -160,6 +165,13 @@ If you want more than one template, configure `templates`:
 ```
 
 Then run **`Saturno: Add Header`**. If more than one named template exists, the command opens a Quick Pick so you can choose the template before the header is inserted.
+
+### Easier Template Maintenance
+
+Use:
+
+- **`Saturno: New Header Template`** to create a new template file, register it in user settings, and open it for editing
+- **`Saturno: Edit Header Templates`** to pick and open an existing template file directly
 
 ---
 

@@ -49,6 +49,14 @@
       {
         "command": "saturno-fancy-header.addHeader",
         "title": "Saturno: Add Header"
+      },
+      {
+        "command": "saturno-fancy-header.newTemplate",
+        "title": "Saturno: New Header Template"
+      },
+      {
+        "command": "saturno-fancy-header.editTemplates",
+        "title": "Saturno: Edit Header Templates"
       }
     ],
     "configuration": {

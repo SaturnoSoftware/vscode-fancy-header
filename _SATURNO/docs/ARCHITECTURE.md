@@ -19,6 +19,13 @@
 6. Header lines are rendered with the active comment syntax
 7. Header is inserted at the top of the document
 
+## Template Management Flow
+
+1. `Saturno: New Header Template` asks for a name
+2. A pure helper resolves a safe file name and target directory
+3. The extension creates the file, updates user settings, and opens it
+4. `Saturno: Edit Header Templates` Quick Picks from configured templates and opens the selected file
+
 ## Boundaries
 
 - **Shared contract:** submodules, wrappers, and editor helper surface

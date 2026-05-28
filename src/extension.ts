@@ -1,8 +1,11 @@
+import * as fs from "fs";
+import * as path from "path";
 import * as vscode from "vscode";
 import { getActiveEditor, getActiveFilePath, showError } from "../libs/Saturno.VSCodeKit/src/EditorUtils";
 import { getCommentSyntaxForEditor } from "./commentSyntax";
 import { DEFAULT_CONFIG, HeaderConfig, NamedHeaderTemplate, normalizeConfig, buildHeader } from "./formatting";
-import { resolveConfiguredTemplateLines, resolveTemplateData } from "./runtime";
+import { getDefaultUserTemplateRoot, resolveConfiguredTemplateLines, resolveTemplateData } from "./runtime";
+import { buildNewTemplateContent, buildUpdatedTemplateList, getEditableTemplateCandidates, resolveUniqueTemplatePath } from "./templateManagement";
 
 const CONFIG_SECTION = "saturno-fancy-header";
 
@@ -12,6 +15,20 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand(
       "saturno-fancy-header.addHeader",
       async () => executeAddHeader()
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "saturno-fancy-header.newTemplate",
+      async () => executeNewTemplate()
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "saturno-fancy-header.editTemplates",
+      async () => executeEditTemplates()
     )
   );
 }
@@ -103,4 +120,100 @@ async function chooseNamedTemplate(templates: NamedHeaderTemplate[]): Promise<Na
   );
 
   return picked?.template;
+}
+
+// -----------------------------------------------------------------------------
+async function executeNewTemplate(): Promise<void> {
+  const config = getConfig();
+  const templateName = (await vscode.window.showInputBox({
+    prompt: "Template name",
+    placeHolder: "ASCII Galaxy",
+    ignoreFocusOut: true,
+    validateInput: (value) => value.trim().length === 0 ? "Template name is required." : undefined,
+  }))?.trim();
+
+  if (!templateName) {
+    return;
+  }
+
+  const templateRoot = getDefaultUserTemplateRoot();
+  const templatePath = resolveUniqueTemplatePath(
+    templateName,
+    config,
+    templateRoot,
+    (candidatePath) => fs.existsSync(candidatePath)
+  );
+
+  const sourceTemplatePath = getEditableTemplateCandidates(config)[0]?.path;
+  const sourceContents = tryReadTextFile(sourceTemplatePath);
+  const contents = buildNewTemplateContent(config, sourceContents);
+
+  fs.mkdirSync(path.dirname(templatePath), { recursive: true });
+  fs.writeFileSync(templatePath, `${contents}\n`, "utf8");
+
+  const updatedTemplates = buildUpdatedTemplateList(config, {
+    name: templateName,
+    path: templatePath,
+  });
+
+  await vscode.workspace
+    .getConfiguration(CONFIG_SECTION)
+    .update("templates", updatedTemplates, vscode.ConfigurationTarget.Global);
+
+  await openTemplateFile(templatePath);
+}
+
+// -----------------------------------------------------------------------------
+async function executeEditTemplates(): Promise<void> {
+  const config = getConfig();
+  const candidates = getEditableTemplateCandidates(config);
+
+  if (candidates.length === 0) {
+    await vscode.commands.executeCommand("workbench.action.openSettingsJson");
+    showError("Saturno FancyHeader: configure templateFile or templates before editing templates.");
+    return;
+  }
+
+  let selected = candidates[0];
+
+  if (candidates.length > 1) {
+    const picked = await vscode.window.showQuickPick(
+      candidates.map((template) => ({
+        label: template.name,
+        description: template.path,
+        template,
+      })),
+      {
+        placeHolder: "Select a Saturno FancyHeader template to edit",
+        ignoreFocusOut: true,
+      }
+    );
+
+    if (!picked) {
+      return;
+    }
+
+    selected = picked.template;
+  }
+
+  await openTemplateFile(selected.path);
+}
+
+// -----------------------------------------------------------------------------
+async function openTemplateFile(templatePath: string): Promise<void> {
+  const document = await vscode.workspace.openTextDocument(vscode.Uri.file(templatePath));
+  await vscode.window.showTextDocument(document, { preview: false });
+}
+
+// -----------------------------------------------------------------------------
+function tryReadTextFile(filePath: string | undefined): string | null {
+  if (!filePath) {
+    return null;
+  }
+
+  try {
+    return fs.readFileSync(filePath, "utf8");
+  } catch {
+    return null;
+  }
 }

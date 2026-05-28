@@ -10,6 +10,24 @@ export interface GitUserInfo {
 }
 
 // -----------------------------------------------------------------------------
+export function getDefaultUserTemplateRoot(
+  platform: NodeJS.Platform = process.platform,
+  env: NodeJS.ProcessEnv = process.env,
+  homeDirectory: string = os.homedir()
+): string {
+  if (platform === "win32") {
+    const appData = env.APPDATA ?? path.join(homeDirectory, "AppData", "Roaming");
+    return path.join(appData, "Code", "User", "saturno-fancy-header");
+  }
+
+  if (platform === "darwin") {
+    return path.posix.join(homeDirectory, "Library", "Application Support", "Code", "User", "saturno-fancy-header");
+  }
+
+  return path.posix.join(homeDirectory, ".config", "Code", "User", "saturno-fancy-header");
+}
+
+// -----------------------------------------------------------------------------
 export function resolveTemplateData(filePath: string, config: HeaderConfig): HeaderTemplateData {
   const gitRoot = getGitRoot(filePath);
   const fileDate = resolveFileDate(filePath);

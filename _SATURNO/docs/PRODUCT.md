@@ -6,6 +6,9 @@
 - Repo: `repos\VSCode\mdheader`
 - Type: VS Code extension
 - Primary command: `saturno-fancy-header.addHeader`
+- Management commands:
+  - `saturno-fancy-header.newTemplate`
+  - `saturno-fancy-header.editTemplates`
 
 ## Purpose
 
