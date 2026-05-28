@@ -1,40 +1,132 @@
-# mdheader
+# Saturno FancyHeader
 
-**Made with <3 by [mateus.digital](https://mateus.digital).**
+[![VS Code](https://badgen.net/badge/vscode/%5E1.88.0/blue)](https://code.visualstudio.com/)
+[![License: GPL-3.0](https://badgen.net/badge/license/GPL--3.0/orange)](./LICENSE.txt)
+[![Tests: local suite](https://badgen.net/badge/tests/node%20suite/green)](./tests)
 
-## Description:
+**Insert consistent file headers with one command.** Language-aware, configurable, and packaged with the Saturno VS Code repo contract.
 
-<!-- <p align="center">
-    <img style="border-radius: 10px;" src="./resources/readme_game.gif"/>
-</p> -->
+Saturno FancyHeader adds a file header at the top of the current document using the active language comment syntax plus file, project, date, and author metadata.
 
+Maintained by [Saturno.Software](https://saturno.software/).
 
-```mdheader``` - Simple vscode extension to add my custom header to files.
+---
 
+## Quick Start
 
-<br>
+### Install from VSIX
 
-As usual, you are **very welcomed** to **share** and **hack** it.
+```bash
+code --install-extension saturno-fancy-header-1.1.0.vsix
+```
 
+### Use
 
-## Installing
+1. Open a file in VS Code
+2. Open Command Palette (`Ctrl+Shift+P`)
+3. Run `Saturno: Add Header`
 
-## Usage:
+**Default output:**
+```text
+// ------------------------------------------------------------------------------
+//   File      : example.ts
+//   Project   : my-project
+//   Date      : 2026-05-28
+//   Copyright : 2026
+//   Copyright : Mateus <mateus@example.com>
+// ------------------------------------------------------------------------------
+```
 
-## Dependencies:
+---
 
-## License:
+## Features
 
-This software is released under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html).
+- **Language-aware** -- Uses VS Code language configuration to choose the right comment syntax
+- **Metadata-driven** -- Inserts file name, project name, date, and author information
+- **Configurable** -- Header template lines, border fill character, width, and author overrides
+- **Saturno repo contract** -- Build/package/test flow matches other Saturno VS Code extensions
 
+---
 
-## Others:
+## Configuration
 
-- Email: hello@mateus.digital
-- Website: https://mateus.digital
-- Itch.io: https://mateusdigital.itch.io
-- Linkedin: https://www.linkedin.com/in/mateusdigital
-- Twitter: https://www.twitter.com/_mateusdigital
-- Youtube: https://www.youtube.com/@_mateusdigital
+All settings are available in VS Code Settings UI under **Saturno FancyHeader**, or in `settings.json`:
 
-There's more FLOSS things at [mateus.digital](https://mateus.digital) :)
+```json
+{
+  "saturno-fancy-header.lineWidth": 80,
+  "saturno-fancy-header.fillChar": "-",
+  "saturno-fancy-header.authorName": "",
+  "saturno-fancy-header.authorEmail": "",
+  "saturno-fancy-header.templateLines": [
+    "  File      : FILENAME",
+    "  Project   : PROJECT",
+    "  Date      : DATE",
+    "  Copyright : YEAR",
+    "  Copyright : USER_NAME <USER_EMAIL>"
+  ]
+}
+```
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `lineWidth` | `80` | Total width of generated header lines |
+| `fillChar` | `"-"` | Border fill character |
+| `authorName` | `""` | Optional author name override |
+| `authorEmail` | `""` | Optional author email override |
+| `templateLines` | default list | Header body lines with placeholders |
+
+Supported placeholders:
+
+- `FILENAME`
+- `PROJECT`
+- `DATE`
+- `YEAR`
+- `USER_NAME`
+- `USER_EMAIL`
+
+---
+
+## Local Development
+
+```bash
+git submodule update --init --recursive
+npm install
+npm test
+npm run build
+npm run package
+```
+
+### Saturno CICD Wrappers
+
+```powershell
+git submodule update --init --recursive
+ 
+pwsh -NoLogo -NoProfile -File .\Saturno.CICD\test.ps1 -ProjectRoot .
+pwsh -NoLogo -NoProfile -File .\Saturno.CICD\build.ps1 -ProjectRoot . -BuildNumber 0
+pwsh -NoLogo -NoProfile -File .\Saturno.CICD\package.ps1 -ProjectRoot . -BuildNumber 0
+```
+
+---
+
+## Repository Layout
+
+```text
+mdheader/
+├── src/                    Extension source
+├── libs/                   Shared VS Code utilities (Saturno.VSCodeKit)
+├── tests/                  Node.js test suite
+├── res/                    Extension icon and resources
+├── Scripts/                Build and VSIX packaging
+├── Saturno.CICD/           Shared CI/CD contract
+├── _SATURNO/               Repo-local documentation
+├── out/                    Compiled JavaScript (generated)
+├── __BUILD/                Staged build output (generated)
+└── __DIST/                 Packaged .vsix artifact (generated)
+```
+
+---
+
+## License
+
+GPL-3.0 -- See [LICENSE.txt](./LICENSE.txt) for details.

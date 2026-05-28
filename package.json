@@ -1,53 +1,139 @@
 {
-  "name": "mdheader",
-  "displayName": "mateusdigital - header",
-  "description": "Tool to be able to add header comments with file information",
-  "publisher": "mateusdigital",
-  "repository": "https://github.com/mateusdigital/mdheader",
-  "website": "https://mateusdigital.com/projects/mdheader",
-  "bugs": "https://github.com/mateusdigital/mdheader/issues",
+  "name": "saturno-fancy-header",
+  "displayName": "Saturno FancyHeader",
+  "description": "Insert configurable file header comments with project, date, and author metadata",
+  "publisher": "saturno-software",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mateusdigital/mdheader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mateusdigital/mdheader/issues"
+  },
+  "homepage": "https://github.com/mateusdigital/mdheader#readme",
   "main": "./out/src/extension.js",
   "icon": "res/images/icon.png",
   "version": "1.1.0",
   "build": 0,
+  "license": "SEE LICENSE IN LICENSE.txt",
   "engines": {
     "vscode": "^1.88.0"
   },
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "header",
+    "file-header",
+    "comments",
+    "metadata",
+    "copyright",
+    "documentation",
+    "productivity"
+  ],
+  "galleryBanner": {
+    "color": "#1F2937",
+    "theme": "dark"
+  },
+  "pricing": "Free",
+  "qna": "marketplace",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": false
+  },
   "activationEvents": [],
   "contributes": {
     "commands": [
       {
-        "command": "mdheader.addHeader",
-        "title": "Add Header"
+        "command": "saturno-fancy-header.addHeader",
+        "title": "Saturno: Add Header"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Saturno FancyHeader",
+      "properties": {
+        "saturno-fancy-header.lineWidth": {
+          "type": "integer",
+          "default": 80,
+          "minimum": 40,
+          "maximum": 200,
+          "description": "Total width of generated header lines."
+        },
+        "saturno-fancy-header.fillChar": {
+          "type": "string",
+          "default": "-",
+          "minLength": 1,
+          "maxLength": 1,
+          "description": "Character used to fill the header border lines."
+        },
+        "saturno-fancy-header.authorName": {
+          "type": "string",
+          "default": "",
+          "description": "Optional author name override. When empty, FancyHeader uses Git config or the OS username."
+        },
+        "saturno-fancy-header.authorEmail": {
+          "type": "string",
+          "default": "",
+          "description": "Optional author email override. When empty, FancyHeader uses Git config when available."
+        },
+        "saturno-fancy-header.templateLines": {
+          "type": "array",
+          "default": [
+            "  File      : FILENAME",
+            "  Project   : PROJECT",
+            "  Date      : DATE",
+            "  Copyright : YEAR",
+            "  Copyright : USER_NAME <USER_EMAIL>"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Template lines inserted between the header border lines. Supported placeholders: FILENAME, PROJECT, DATE, YEAR, USER_NAME, USER_EMAIL."
+        }
+      }
+    }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "pwsh -NoLogo -NoProfile -Command \"if (Test-Path -LiteralPath ./out) { Remove-Item -LiteralPath ./out -Recurse -Force }\" && tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
-    "test": "vscode-test",
-    "package": "vsce package",
-    "publish": "vsce publish"
+    "lint": "eslint src libs tests --ext ts",
+    "test": "npm run compile && tsc -p tests/tsconfig.json && node --test out/tests/*.test.js",
+    "build": "npm run lint && npm run compile && pwsh -NoLogo -NoProfile -File ./Scripts/build.ps1 -ProjectRoot . -BuildOutputDir __BUILD/_staging",
+    "package": "pwsh -NoLogo -NoProfile -File ./Scripts/package-vsix.ps1",
+    "vscode:prepublish": "npm run compile"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
     "@types/vscode": "^1.88.0",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
-    "@vscode/test-cli": "^0.0.8",
-    "@vscode/test-electron": "^2.3.9",
+    "@vscode/vsce": "^3.0.0",
     "eslint": "^8.57.0",
-    "typescript": "^5.3.3"
+    "typescript": "5.3.3"
   },
   "dependencies": {
-    "json5": "^2.2.3",
-    "vsce": "^2.15.0"
+    "json5": "^2.2.3"
+  },
+  "saturno": {
+    "cicd": {
+      "artifactPrefix": "Saturno.VSCode.FancyHeader",
+      "build": {
+        "stagingRoot": "__BUILD/_staging",
+        "expectedFiles": [
+          "package.json",
+          "out/src/extension.js"
+        ],
+        "expectedDirectories": [
+          "out/libs"
+        ]
+      },
+      "release": {
+        "assets": [
+          "*.vsix"
+        ]
+      }
+    }
   }
 }

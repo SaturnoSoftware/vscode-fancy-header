@@ -8,15 +8,9 @@
     "strict": true,
     "rootDir": "./",
     "baseUrl": ".",
-    "paths": {
-      "@mdViseu/*": ["libs/lib-mdViseu/mdViseu/*"]
-    }
-
-    /* Additional Checks */
-    // "noImplicitReturns": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noUnusedParameters": true
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
-  "include": ["src", "libs"],
-  "exclude": ["node_modules", ".vscode-test"]
+  "include": ["src"],
+  "exclude": ["node_modules", ".vscode-test", "tests"]
 }
