@@ -8,4 +8,18 @@
     },
     // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
     "typescript.tsc.autoDetect": "off",
+    "saturno-fancy-header.templates": [
+        {
+            "name": "Default",
+            "path": "${workspaceFolder}\\_header-template.txt"
+        },
+        {
+            "name": "ASCII Galaxy",
+            "path": "${workspaceFolder}\\_header-galaxy.txt"
+        },
+        {
+            "name": "Minimal",
+            "path": "${workspaceFolder}\\_header-minimal.txt"
+        }
+    ]
 }
