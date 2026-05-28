@@ -15,8 +15,9 @@
 2. Extension resolves the active editor and file path
 3. Comment syntax is resolved from VS Code language configuration
 4. File/project/date/author metadata is collected
-5. Header lines are rendered with the active comment syntax
-6. Header is inserted at the top of the document
+5. Header template lines are resolved from settings or an external template file
+6. Header lines are rendered with the active comment syntax
+7. Header is inserted at the top of the document
 
 ## Boundaries
 

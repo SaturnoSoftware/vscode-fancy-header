@@ -45,6 +45,71 @@ export function resolveAuthorInfo(
 }
 
 // -----------------------------------------------------------------------------
+export function resolveConfiguredTemplateLines(
+  currentFilePath: string,
+  workspaceFolderPath: string | null,
+  config: HeaderConfig
+): string[] {
+  if (!config.templateFile) {
+    return config.templateLines;
+  }
+
+  const templatePath = resolveTemplateFilePath(config.templateFile, currentFilePath, workspaceFolderPath);
+  let contents: string;
+
+  try {
+    contents = fs.readFileSync(templatePath, "utf8");
+  } catch (error) {
+    throw new Error(`Saturno FancyHeader: failed to read template file "${templatePath}".`);
+  }
+
+  const lines = contents
+    .replace(/^\uFEFF/, "")
+    .split(/\r?\n/);
+
+  while (lines.length > 0 && lines[lines.length - 1] === "") {
+    lines.pop();
+  }
+
+  if (lines.length === 0) {
+    throw new Error(`Saturno FancyHeader: template file "${templatePath}" is empty.`);
+  }
+
+  return lines;
+}
+
+// -----------------------------------------------------------------------------
+export function resolveTemplateFilePath(
+  configuredPath: string,
+  currentFilePath: string,
+  workspaceFolderPath: string | null
+): string {
+  let resolved = configuredPath.trim();
+  if (!resolved) {
+    throw new Error("Saturno FancyHeader: template file path is empty.");
+  }
+
+  if (resolved.includes("${workspaceFolder}")) {
+    if (!workspaceFolderPath) {
+      throw new Error("Saturno FancyHeader: ${workspaceFolder} requires an opened workspace folder.");
+    }
+    resolved = resolved.replaceAll("${workspaceFolder}", workspaceFolderPath);
+  }
+
+  resolved = resolved.replaceAll("${fileDirname}", path.dirname(currentFilePath));
+
+  if (resolved === "~" || resolved.startsWith(`~${path.sep}`) || resolved.startsWith("~/") || resolved.startsWith("~\\")) {
+    resolved = path.join(os.homedir(), resolved.slice(1));
+  }
+
+  if (!path.isAbsolute(resolved)) {
+    resolved = path.join(workspaceFolderPath ?? path.dirname(currentFilePath), resolved);
+  }
+
+  return path.resolve(resolved);
+}
+
+// -----------------------------------------------------------------------------
 function resolveFileDate(filePath: string): Date {
   return getInitialFileDate(filePath) ?? getFileCreationDate(filePath) ?? new Date();
 }

@@ -1,7 +1,11 @@
 import { describe, it } from "node:test";
 import * as assert from "node:assert/strict";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import { calculateCopyrightYear, formatDateYYYYMMDD } from "../src/formatting";
-import { resolveAuthorInfo } from "../src/runtime";
+import { DEFAULT_CONFIG } from "../src/formatting";
+import { resolveAuthorInfo, resolveConfiguredTemplateLines, resolveTemplateFilePath } from "../src/runtime";
 
 describe("format helpers", () => {
   it("formats dates as YYYY-MM-DD", () => {
@@ -34,6 +38,55 @@ describe("resolveAuthorInfo", () => {
     assert.deepStrictEqual(result, {
       name: "Override Name",
       email: "override@example.com",
+    });
+  });
+
+  describe("template files", () => {
+    it("resolves workspace and file directory tokens", () => {
+      const currentFilePath = "D:\\Projects\\repo\\src\\main.ts";
+      const workspaceFolderPath = "D:\\Projects\\repo";
+
+      assert.strictEqual(
+        resolveTemplateFilePath("${workspaceFolder}\\templates\\header.txt", currentFilePath, workspaceFolderPath),
+        path.resolve("D:\\Projects\\repo\\templates\\header.txt")
+      );
+
+      assert.strictEqual(
+        resolveTemplateFilePath("${fileDirname}\\header.txt", currentFilePath, workspaceFolderPath),
+        path.resolve("D:\\Projects\\repo\\src\\header.txt")
+      );
+    });
+
+    it("loads template lines from a file and trims only trailing empty lines", () => {
+      const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fancyheader-template-"));
+      const workspaceFolderPath = tempRoot;
+      const currentFilePath = path.join(tempRoot, "src", "main.ts");
+      const templateFilePath = path.join(tempRoot, "_header-template.txt");
+
+      fs.mkdirSync(path.dirname(currentFilePath), { recursive: true });
+      fs.writeFileSync(currentFilePath, "");
+      fs.writeFileSync(templateFilePath, "Line 1\n\nLine 3\n");
+
+      const lines = resolveConfiguredTemplateLines(currentFilePath, workspaceFolderPath, {
+        ...DEFAULT_CONFIG,
+        templateFile: "${workspaceFolder}\\_header-template.txt",
+      });
+
+      assert.deepStrictEqual(lines, ["Line 1", "", "Line 3"]);
+    });
+
+    it("throws when the configured template file cannot be read", () => {
+      const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fancyheader-template-missing-"));
+      const currentFilePath = path.join(tempRoot, "main.ts");
+      fs.writeFileSync(currentFilePath, "");
+
+      assert.throws(
+        () => resolveConfiguredTemplateLines(currentFilePath, tempRoot, {
+          ...DEFAULT_CONFIG,
+          templateFile: "${workspaceFolder}\\missing.txt",
+        }),
+        /failed to read template file/
+      );
     });
   });
 

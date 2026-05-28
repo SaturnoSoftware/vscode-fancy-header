@@ -16,4 +16,4 @@ Generate a consistent file header at the top of the active editor using the lang
 - Inserts the header at line 1 of the active file
 - Uses Git metadata when available
 - Falls back to file creation date and OS username when Git data is missing
-- Supports configurable template lines, line width, border fill character, and author overrides
+- Supports configurable template lines, editable template files, line width, border fill character, and author overrides

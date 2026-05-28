@@ -15,6 +15,7 @@ export interface HeaderConfig {
   lineWidth: number;
   fillChar: string;
   templateLines: string[];
+  templateFile: string;
   authorName: string;
   authorEmail: string;
 }
@@ -31,6 +32,7 @@ export const DEFAULT_CONFIG: HeaderConfig = {
   lineWidth: 80,
   fillChar: "-",
   templateLines: DEFAULT_TEMPLATE_LINES,
+  templateFile: "",
   authorName: "",
   authorEmail: "",
 };
@@ -41,6 +43,7 @@ export function normalizeConfig(config: Partial<HeaderConfig> = {}): HeaderConfi
     lineWidth: normalizeLineWidth(config.lineWidth),
     fillChar: normalizeFillChar(config.fillChar),
     templateLines: normalizeTemplateLines(config.templateLines),
+    templateFile: (config.templateFile ?? DEFAULT_CONFIG.templateFile).trim(),
     authorName: (config.authorName ?? DEFAULT_CONFIG.authorName).trim(),
     authorEmail: (config.authorEmail ?? DEFAULT_CONFIG.authorEmail).trim(),
   };
@@ -126,13 +129,24 @@ function buildCommentLine(
 
 // -----------------------------------------------------------------------------
 function replaceTemplateTokens(line: string, data: HeaderTemplateData): string {
-  return line
-    .replace(/FILENAME/g, data.fileName)
-    .replace(/PROJECT/g, data.projectName)
-    .replace(/DATE/g, data.date)
-    .replace(/YEAR/g, data.copyrightYear)
-    .replace(/USER_NAME/g, data.userName)
-    .replace(/USER_EMAIL/g, data.userEmail);
+  const replacements: Record<string, string> = {
+    FILENAME: data.fileName,
+    PROJECT: data.projectName,
+    DATE: data.date,
+    YEAR: data.copyrightYear,
+    USER_NAME: data.userName,
+    USER_EMAIL: data.userEmail,
+  };
+
+  let result = line;
+  for (const [token, value] of Object.entries(replacements)) {
+    result = result
+      .replaceAll(token, value)
+      .replaceAll(`\${${token}}`, value)
+      .replaceAll(`{{${token}}}`, value);
+  }
+
+  return result;
 }
 
 // -----------------------------------------------------------------------------

@@ -8,6 +8,7 @@ describe("normalizeConfig", () => {
       lineWidth: 120,
       fillChar: "=",
       templateLines: ["One", "Two"],
+      templateFile: "  ${workspaceFolder}\\header.txt  ",
       authorName: "  Mateus  ",
       authorEmail: "  hello@saturno.software  ",
     });
@@ -15,6 +16,7 @@ describe("normalizeConfig", () => {
     assert.strictEqual(result.lineWidth, 120);
     assert.strictEqual(result.fillChar, "=");
     assert.deepStrictEqual(result.templateLines, ["One", "Two"]);
+    assert.strictEqual(result.templateFile, "${workspaceFolder}\\header.txt");
     assert.strictEqual(result.authorName, "Mateus");
     assert.strictEqual(result.authorEmail, "hello@saturno.software");
   });

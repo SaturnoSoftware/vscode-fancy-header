@@ -91,6 +91,11 @@
             "type": "string"
           },
           "description": "Template lines inserted between the header border lines. Supported placeholders: FILENAME, PROJECT, DATE, YEAR, USER_NAME, USER_EMAIL."
+        },
+        "saturno-fancy-header.templateFile": {
+          "type": "string",
+          "default": "",
+          "description": "Optional path to a text file with the header template. Supports absolute paths, workspace-relative paths, ${workspaceFolder}, ${fileDirname}, and ~. When set, this overrides templateLines."
         }
       }
     }

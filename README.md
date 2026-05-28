@@ -43,7 +43,7 @@ code --install-extension saturno-fancy-header-1.1.0.vsix
 
 - **Language-aware** -- Uses VS Code language configuration to choose the right comment syntax
 - **Metadata-driven** -- Inserts file name, project name, date, and author information
-- **Configurable** -- Header template lines, border fill character, width, and author overrides
+- **Configurable** -- Header template lines, editable template files, border fill character, width, and author overrides
 - **Saturno repo contract** -- Build/package/test flow matches other Saturno VS Code extensions
 
 ---
@@ -56,6 +56,7 @@ All settings are available in VS Code Settings UI under **Saturno FancyHeader**,
 {
   "saturno-fancy-header.lineWidth": 80,
   "saturno-fancy-header.fillChar": "-",
+  "saturno-fancy-header.templateFile": "${workspaceFolder}\\_header-template.txt",
   "saturno-fancy-header.authorName": "",
   "saturno-fancy-header.authorEmail": "",
   "saturno-fancy-header.templateLines": [
@@ -72,6 +73,7 @@ All settings are available in VS Code Settings UI under **Saturno FancyHeader**,
 |---------|---------|-------------|
 | `lineWidth` | `80` | Total width of generated header lines |
 | `fillChar` | `"-"` | Border fill character |
+| `templateFile` | `""` | Optional editable text file used as the template body |
 | `authorName` | `""` | Optional author name override |
 | `authorEmail` | `""` | Optional author email override |
 | `templateLines` | default list | Header body lines with placeholders |
@@ -84,6 +86,44 @@ Supported placeholders:
 - `YEAR`
 - `USER_NAME`
 - `USER_EMAIL`
+
+`templateFile` supports:
+
+- absolute paths
+- paths relative to the current workspace
+- `${workspaceFolder}`
+- `${fileDirname}`
+- `~`
+
+### Editable Template File Example
+
+Put this in a file like `_header-template.txt`:
+
+```text
+                     *       +
+               '                  |
+           ()    .-.,="``"=.    - o -
+                 '=/_       \\     |
+              *   |  '=._    |
+                   \\     `=./`,        '
+                .   '=.__.=' `='      *
+
+  File      : ${FILENAME}
+  Project   : ${PROJECT}
+  Date      : ${DATE}
+  Copyright : ${YEAR}
+  Author    : ${USER_NAME} <${USER_EMAIL}>
+```
+
+Then point the extension to it in `settings.json`:
+
+```json
+{
+  "saturno-fancy-header.templateFile": "${workspaceFolder}\\_header-template.txt"
+}
+```
+
+When `templateFile` is set, it overrides `templateLines`.
 
 ---
 
