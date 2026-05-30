@@ -5,17 +5,17 @@
   "publisher": "saturno-software",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mateusdigital/mdheader.git"
+    "url": "https://github.com/SaturnoSoftware/vscode-fancy-header.git"
   },
   "bugs": {
-    "url": "https://github.com/mateusdigital/mdheader/issues"
+    "url": "https://github.com/SaturnoSoftware/vscode-fancy-header/issues"
   },
-  "homepage": "https://github.com/mateusdigital/mdheader#readme",
+  "homepage": "https://github.com/SaturnoSoftware/vscode-fancy-header#readme",
   "main": "./out/src/extension.js",
   "icon": "res/images/icon.png",
   "version": "1.1.0",
-  "build": 0,
-  "license": "SEE LICENSE IN LICENSE.txt",
+  "build": 1,
+  "license": "GPL-3.0-or-later",
   "engines": {
     "vscode": "^1.88.0"
   },
@@ -110,7 +110,10 @@
           "default": [],
           "items": {
             "type": "object",
-            "required": ["name", "path"],
+            "required": [
+              "name",
+              "path"
+            ],
             "properties": {
               "name": {
                 "type": "string",

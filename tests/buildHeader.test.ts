@@ -18,6 +18,14 @@ const htmlStyleSyntax: CommentSyntax = {
   multiLineEnd: "-->",
 };
 
+const hashStyleSyntax: CommentSyntax = {
+  singleLineStart: "#",
+  singleLineEnd: "",
+  multiLineStart: "#",
+  multiLineMiddle: "#",
+  multiLineEnd: "#",
+};
+
 const sampleData: HeaderTemplateData = {
   fileName: "feature.ts",
   projectName: "saturno-project",
@@ -70,6 +78,17 @@ describe("buildHeader", () => {
     assert.strictEqual(lines[0].length, 80);
   });
 
+  it("uses at least two comment characters for one-character line comments", () => {
+    const result = buildHeader(hashStyleSyntax, sampleData, DEFAULT_CONFIG);
+    const lines = result.trimEnd().split("\n");
+
+    assert.strictEqual(lines[0].length, 80);
+    assert.ok(lines[0].startsWith("## "));
+    assert.ok(lines[0].endsWith(" ##"));
+    assert.ok(lines[1].startsWith("## "));
+    assert.ok(lines[1].endsWith(" ##"));
+  });
+
   it("replaces wrapped placeholder tokens inside template lines", () => {
     const result = buildHeader(cStyleSyntax, sampleData, {
       ...DEFAULT_CONFIG,
@@ -120,6 +139,13 @@ describe("buildHeaderLine", () => {
     assert.ok(result.startsWith("<!-- "));
     assert.ok(result.endsWith(" -->"));
   });
+
+  it("duplicates one-character line comment tokens on both sides", () => {
+    const result = buildHeaderLine(hashStyleSyntax, "Title", " ", 60);
+    assert.strictEqual(result.length, 60);
+    assert.ok(result.startsWith("## "));
+    assert.ok(result.endsWith(" ##"));
+  });
 });
 
 describe("replaceTemplateTokens", () => {
@@ -145,5 +171,14 @@ describe("replaceTemplateTokens", () => {
     assert.ok(result.includes("feature.ts"));
     assert.ok(result.includes("saturno-project"));
     assert.ok(result.includes("Mateus <mateus@saturno.software>"));
+  });
+
+  it("removes empty email brackets when no user email is available", () => {
+    const result = replaceTemplateTokens(
+      "  Author    : ${USER_NAME} <${USER_EMAIL}>",
+      { ...sampleData, userEmail: "" }
+    );
+
+    assert.strictEqual(result, "  Author    : Mateus");
   });
 });

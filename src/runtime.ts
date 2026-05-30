@@ -28,10 +28,14 @@ export function getDefaultUserTemplateRoot(
 }
 
 // -----------------------------------------------------------------------------
-export function resolveTemplateData(filePath: string, config: HeaderConfig): HeaderTemplateData {
+export function resolveTemplateData(
+  filePath: string,
+  config: HeaderConfig,
+  workspaceFolderPath: string | null = null
+): HeaderTemplateData {
   const gitRoot = getGitRoot(filePath);
   const fileDate = resolveFileDate(filePath);
-  const gitUser = gitRoot ? getGitUserInfo(gitRoot) : null;
+  const gitUser = getGitUserInfo(gitRoot);
   const author = resolveAuthorInfo(
     config.authorName,
     config.authorEmail,
@@ -41,7 +45,7 @@ export function resolveTemplateData(filePath: string, config: HeaderConfig): Hea
 
   return {
     fileName: path.basename(filePath),
-    projectName: path.basename(gitRoot ?? filePath),
+    projectName: resolveProjectName(filePath, gitRoot, workspaceFolderPath),
     date: formatDateYYYYMMDD(fileDate),
     copyrightYear: calculateCopyrightYear(fileDate),
     userName: author.name,
@@ -133,14 +137,68 @@ function resolveFileDate(filePath: string): Date {
 }
 
 // -----------------------------------------------------------------------------
-function getGitRoot(filePath: string): string | null {
-  return runGit(path.dirname(filePath), ["rev-parse", "--show-toplevel"]);
+export function findGitRootFromFilePath(filePath: string): string | null {
+  let currentDirectory = path.dirname(path.resolve(filePath));
+
+  while (true) {
+    if (fs.existsSync(path.join(currentDirectory, ".git"))) {
+      return currentDirectory;
+    }
+
+    const parentDirectory = path.dirname(currentDirectory);
+    if (parentDirectory === currentDirectory) {
+      return null;
+    }
+
+    currentDirectory = parentDirectory;
+  }
 }
 
 // -----------------------------------------------------------------------------
-function getGitUserInfo(gitRoot: string): GitUserInfo | null {
+export function resolveProjectName(
+  filePath: string,
+  gitRoot: string | null,
+  workspaceFolderPath: string | null
+): string {
+  return path.basename(workspaceFolderPath ?? gitRoot ?? path.dirname(filePath));
+}
+
+// -----------------------------------------------------------------------------
+function getGitRoot(filePath: string): string | null {
+  return findGitRootFromFilePath(filePath) ?? runGit(path.dirname(filePath), ["rev-parse", "--show-toplevel"]);
+}
+
+// -----------------------------------------------------------------------------
+function getGitUserInfo(gitRoot: string | null): GitUserInfo | null {
+  return getGitUserInfoFromCommand(gitRoot) ?? readGitUserInfoFromConfigFiles(gitRoot);
+}
+
+// -----------------------------------------------------------------------------
+function getGitUserInfoFromCommand(gitRoot: string | null): GitUserInfo | null {
+  if (!gitRoot) {
+    return null;
+  }
+
   const name = runGit(gitRoot, ["config", "user.name"]) ?? "";
   const email = runGit(gitRoot, ["config", "user.email"]) ?? "";
+
+  if (!name && !email) {
+    return null;
+  }
+
+  return { name, email };
+}
+
+// -----------------------------------------------------------------------------
+export function readGitUserInfoFromConfigFiles(
+  gitRoot: string | null,
+  homeDirectory: string = os.homedir()
+): GitUserInfo | null {
+  const globalUser = readGitUserInfoFromConfigFile(path.join(homeDirectory, ".gitconfig"));
+  const localConfigPath = gitRoot ? getGitConfigPath(gitRoot) : null;
+  const localUser = localConfigPath ? readGitUserInfoFromConfigFile(localConfigPath) : null;
+  const name = localUser?.name?.trim() || globalUser?.name?.trim() || "";
+  const email = localUser?.email?.trim() || globalUser?.email?.trim() || "";
 
   if (!name && !email) {
     return null;
@@ -210,4 +268,118 @@ function parseDate(text: string): Date | null {
   }
 
   return parsed;
+}
+
+// -----------------------------------------------------------------------------
+function getGitConfigPath(gitRoot: string): string | null {
+  const gitDirectory = resolveGitDirectory(gitRoot);
+  if (!gitDirectory) {
+    return null;
+  }
+
+  return path.join(gitDirectory, "config");
+}
+
+// -----------------------------------------------------------------------------
+function resolveGitDirectory(gitRoot: string): string | null {
+  const gitMarkerPath = path.join(gitRoot, ".git");
+
+  try {
+    const stats = fs.statSync(gitMarkerPath);
+    if (stats.isDirectory()) {
+      return gitMarkerPath;
+    }
+
+    if (!stats.isFile()) {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+
+  let pointerFile: string;
+  try {
+    pointerFile = fs.readFileSync(gitMarkerPath, "utf8");
+  } catch {
+    return null;
+  }
+
+  const match = pointerFile.match(/^\s*gitdir:\s*(.+)\s*$/im);
+  if (!match) {
+    return null;
+  }
+
+  const resolvedGitDirectory = path.resolve(gitRoot, match[1].trim());
+
+  try {
+    return fs.statSync(resolvedGitDirectory).isDirectory() ? resolvedGitDirectory : null;
+  } catch {
+    return null;
+  }
+}
+
+// -----------------------------------------------------------------------------
+function readGitUserInfoFromConfigFile(configPath: string): GitUserInfo | null {
+  let contents: string;
+  try {
+    contents = fs.readFileSync(configPath, "utf8");
+  } catch {
+    return null;
+  }
+
+  let currentSection = "";
+  let name = "";
+  let email = "";
+
+  for (const rawLine of contents.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith(";") || line.startsWith("#")) {
+      continue;
+    }
+
+    const sectionMatch = rawLine.match(/^\s*\[([^\]]+)\]\s*$/);
+    if (sectionMatch) {
+      currentSection = sectionMatch[1].trim().split(/\s+/, 1)[0]?.toLowerCase() ?? "";
+      continue;
+    }
+
+    if (currentSection !== "user") {
+      continue;
+    }
+
+    const entryMatch = rawLine.match(/^\s*([A-Za-z][A-Za-z0-9-]*)\s*=\s*(.*?)\s*$/);
+    if (!entryMatch) {
+      continue;
+    }
+
+    const key = entryMatch[1].toLowerCase();
+    const value = normalizeGitConfigValue(entryMatch[2]);
+    if (key === "name") {
+      name = value;
+      continue;
+    }
+
+    if (key === "email") {
+      email = value;
+    }
+  }
+
+  if (!name && !email) {
+    return null;
+  }
+
+  return { name, email };
+}
+
+// -----------------------------------------------------------------------------
+function normalizeGitConfigValue(value: string): string {
+  const trimmed = value.trim();
+  const hasDoubleQuotes = trimmed.startsWith("\"") && trimmed.endsWith("\"");
+  const hasSingleQuotes = trimmed.startsWith("'") && trimmed.endsWith("'");
+
+  if (trimmed.length >= 2 && (hasDoubleQuotes || hasSingleQuotes)) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
 }

@@ -147,8 +147,9 @@ export function buildHeaderLine(
   fillChar: string,
   lineWidth: number
 ): string {
-  const prefix = `${syntax.singleLineStart} `;
-  const suffixToken = syntax.singleLineEnd || syntax.singleLineStart;
+  const prefixToken = normalizeFenceToken(syntax.singleLineStart);
+  const suffixToken = normalizeFenceToken(syntax.singleLineEnd || syntax.singleLineStart);
+  const prefix = `${prefixToken} `;
   const suffix = ` ${suffixToken}`;
   const fillLength = Math.max(0, lineWidth - prefix.length - text.length - suffix.length);
   return prefix + text + fillChar.repeat(fillLength) + suffix;
@@ -173,10 +174,19 @@ export function replaceTemplateTokens(line: string, data: HeaderTemplateData): s
       .replaceAll(token, value);
   }
 
+  if (!data.userEmail.trim()) {
+    result = result.replace(/\s*<\s*>\s*/g, "");
+  }
+
   return result;
 }
 
 // -----------------------------------------------------------------------------
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
+}
+
+// -----------------------------------------------------------------------------
+function normalizeFenceToken(token: string): string {
+  return token.length >= 2 ? token : token.repeat(2);
 }

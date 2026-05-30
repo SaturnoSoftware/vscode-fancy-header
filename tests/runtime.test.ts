@@ -5,7 +5,14 @@ import * as os from "os";
 import * as path from "path";
 import { calculateCopyrightYear, formatDateYYYYMMDD } from "../src/formatting";
 import { DEFAULT_CONFIG } from "../src/formatting";
-import { resolveAuthorInfo, resolveConfiguredTemplateLines, resolveTemplateFilePath } from "../src/runtime";
+import {
+  findGitRootFromFilePath,
+  readGitUserInfoFromConfigFiles,
+  resolveAuthorInfo,
+  resolveConfiguredTemplateLines,
+  resolveProjectName,
+  resolveTemplateFilePath,
+} from "../src/runtime";
 
 describe("format helpers", () => {
   it("formats dates as YYYY-MM-DD", () => {
@@ -101,6 +108,50 @@ describe("resolveAuthorInfo", () => {
     assert.deepStrictEqual(fromOs, {
       name: "os-user",
       email: "",
+    });
+  });
+});
+
+describe("git metadata helpers", () => {
+  it("prefers the workspace folder name for project metadata", () => {
+    assert.strictEqual(
+      resolveProjectName(
+        "D:\\Projects\\saturnosoftware\\repos_public\\Libs\\Saturno.VSCodeKit\\src\\EditorUtils.ts",
+        "D:\\Projects\\saturnosoftware",
+        "D:\\Projects\\saturnosoftware\\repos_public\\Libs\\Saturno.VSCodeKit"
+      ),
+      "Saturno.VSCodeKit"
+    );
+  });
+
+  it("finds the nearest git root by walking parent directories", () => {
+    const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fancyheader-git-root-"));
+    const filePath = path.join(tempRoot, "packages", "demo", "src", "main.ts");
+
+    fs.mkdirSync(path.join(tempRoot, ".git"), { recursive: true });
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, "");
+
+    assert.strictEqual(findGitRootFromFilePath(filePath), tempRoot);
+  });
+
+  it("reads local and global git identity from config files", () => {
+    const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "fancyheader-home-"));
+    const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fancyheader-config-"));
+
+    fs.mkdirSync(path.join(tempRoot, ".git"), { recursive: true });
+    fs.writeFileSync(
+      path.join(tempRoot, ".git", "config"),
+      "[user]\nname = Local Name\n"
+    );
+    fs.writeFileSync(
+      path.join(tempHome, ".gitconfig"),
+      "[user]\nemail = global@example.com\n"
+    );
+
+    assert.deepStrictEqual(readGitUserInfoFromConfigFiles(tempRoot, tempHome), {
+      name: "Local Name",
+      email: "global@example.com",
     });
   });
 });

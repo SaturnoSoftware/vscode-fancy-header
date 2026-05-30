@@ -1,39 +1,30 @@
 param(
     [string]$ProjectRoot = (Split-Path $PSScriptRoot -Parent),
-    [string]$PackageOutputDir = ""
+    [string]$PackageOutputDir = (Join-Path $ProjectRoot "out/package"),
+    [string]$ReleaseName = "vscode-fancy-header"
 )
 
 $ErrorActionPreference = "Stop"
-$ResolvedProjectRoot = (Resolve-Path -LiteralPath $ProjectRoot).ProviderPath
+$ProjectRoot = (Resolve-Path -LiteralPath $ProjectRoot).ProviderPath
 
-if ([string]::IsNullOrWhiteSpace($PackageOutputDir)) {
-    $PackageOutputDir = Join-Path $ResolvedProjectRoot "__DIST"
-}
+Write-Host "==> Packaging: $ReleaseName"
 
-if (-not [IO.Path]::IsPathRooted($PackageOutputDir)) {
-    $PackageOutputDir = Join-Path $ResolvedProjectRoot $PackageOutputDir
-}
+Remove-Item -LiteralPath $PackageOutputDir -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force -Path $PackageOutputDir | Out-Null
 
-if (-not (Test-Path -LiteralPath $PackageOutputDir -PathType Container)) {
-    New-Item -ItemType Directory -Force -Path $PackageOutputDir | Out-Null
-}
-
-Write-Host "==> Packaging VSIX"
-Write-Host "==> Project root: $ResolvedProjectRoot"
-Write-Host "==> Output dir: $PackageOutputDir"
-
-Push-Location $ResolvedProjectRoot
+Push-Location $ProjectRoot
 try {
     & npx vsce package --out "$PackageOutputDir/"
     if ($LASTEXITCODE -ne 0) { throw "vsce package failed." }
-
-    $VsixFile = Get-ChildItem -Path $PackageOutputDir -Filter "*.vsix" | Select-Object -First 1
-    if ($null -eq $VsixFile) {
-        throw "No .vsix file found after packaging."
-    }
-
-    Write-Host "==> Packaged: $($VsixFile.Name)"
 }
 finally {
     Pop-Location
 }
+
+$VsixFile = Get-ChildItem -Path $PackageOutputDir -Filter "*.vsix" | Select-Object -First 1
+if ($null -eq $VsixFile) {
+    throw "No .vsix file found after packaging."
+}
+
+Write-Host "==> Packaged: $($VsixFile.Name)"
+Write-Host "==> Done"

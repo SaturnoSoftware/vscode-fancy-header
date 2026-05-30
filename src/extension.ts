@@ -1,8 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { getActiveEditor, getActiveFilePath, showError } from "../libs/Saturno.VSCodeKit/src/EditorUtils";
-import { getCommentSyntaxForEditor } from "./commentSyntax";
+import { getActiveEditor, getActiveFilePath, getCommentSyntaxForEditor, showError } from "../libs/Saturno.VSCodeKit/src";
 import { DEFAULT_CONFIG, HeaderConfig, NamedHeaderTemplate, normalizeConfig, buildHeader } from "./formatting";
 import { getDefaultUserTemplateRoot, resolveConfiguredTemplateLines, resolveTemplateData } from "./runtime";
 import {
@@ -97,7 +96,7 @@ async function executeAddHeader(): Promise<void> {
     return;
   }
 
-  const templateData = resolveTemplateData(filePath, effectiveConfig);
+  const templateData = resolveTemplateData(filePath, effectiveConfig, workspaceFolderPath);
   const header = buildHeader(syntax, templateData, { ...effectiveConfig, templateLines });
 
   editor.edit((editBuilder) => {
