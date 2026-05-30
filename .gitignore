@@ -5,3 +5,6 @@ node_modules
 *.vsix
 __BUILD/
 __DIST/
+.claude/
+Saturno.VSCodeFancyHeader.Internal/
+Saturno.VSCodeFancyHeader.Interval/
