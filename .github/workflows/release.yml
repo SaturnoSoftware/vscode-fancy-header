@@ -35,41 +35,11 @@ jobs:
         shell: pwsh
         run: ./Saturno.CICD/test.ps1 -ProjectRoot $PWD
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [validate]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
-          token: ${{ secrets.SATURNO_CI_SUBMODULES_TOKEN || github.token }}
-
-      - name: Setup project
-        uses: ./.github/actions/setup
-        with:
-          submodules-token: ${{ secrets.SATURNO_CI_SUBMODULES_TOKEN || github.token }}
-
-      - name: Run build
-        shell: pwsh
-        run: ./Saturno.CICD/build.ps1 -ProjectRoot $PWD -BuildNumber $env:GITHUB_RUN_NUMBER
-
-      - name: Upload build output
-        uses: actions/upload-artifact@v5
-        with:
-          name: release-build-output-${{ github.run_number }}
-          path: __BUILD/**
-          if-no-files-found: error
-          retention-days: 5
-
   package:
     name: Package
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [build]
+    timeout-minutes: 15
+    needs: [validate]
     outputs:
       release_name: ${{ steps.names.outputs.release_name }}
       archive_path: ${{ steps.names.outputs.archive_path }}
@@ -87,11 +57,9 @@ jobs:
         with:
           submodules-token: ${{ secrets.SATURNO_CI_SUBMODULES_TOKEN || github.token }}
 
-      - name: Download build output
-        uses: actions/download-artifact@v5
-        with:
-          name: release-build-output-${{ github.run_number }}
-          path: __BUILD
+      - name: Run build
+        shell: pwsh
+        run: ./Saturno.CICD/build.ps1 -ProjectRoot $PWD -BuildNumber $env:GITHUB_RUN_NUMBER
 
       - name: Run package
         id: package
@@ -102,14 +70,6 @@ jobs:
         id: names
         shell: pwsh
         run: ./Saturno.CICD/release/compute-metadata.ps1 -ProjectRoot $PWD
-
-      - name: Upload package artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: ${{ steps.names.outputs.artifact_name }}
-          path: ${{ steps.names.outputs.archive_path }}
-          if-no-files-found: error
-          retention-days: 90
 
       - name: Publish GitHub release asset
         shell: pwsh
