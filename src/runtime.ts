@@ -17,7 +17,7 @@ export function getDefaultUserTemplateRoot(
 ): string {
   if (platform === "win32") {
     const appData = env.APPDATA ?? path.join(homeDirectory, "AppData", "Roaming");
-    return path.join(appData, "Code", "User", "saturno-fancy-header");
+    return path.win32.join(appData, "Code", "User", "saturno-fancy-header");
   }
 
   if (platform === "darwin") {

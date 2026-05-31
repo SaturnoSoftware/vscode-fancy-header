@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import * as assert from "node:assert/strict";
+import * as path from "node:path";
 import { DEFAULT_CONFIG } from "../src/formatting";
 import {
   buildNewTemplateContent,
@@ -14,6 +15,16 @@ import {
   slugifyTemplateName,
 } from "../src/templateManagement";
 import { getDefaultUserTemplateRoot } from "../src/runtime";
+
+const TEMPLATES_ROOT = process.platform === "win32"
+  ? "D:\\Templates"
+  : "/tmp/Templates";
+const FALLBACK_ROOT = process.platform === "win32"
+  ? "D:\\Fallback"
+  : "/tmp/Fallback";
+const USER_TEMPLATES_ROOT = process.platform === "win32"
+  ? "D:\\UserTemplates"
+  : "/tmp/UserTemplates";
 
 describe("templateManagement", () => {
   it("slugifies template names into stable file-safe ids", () => {
@@ -30,43 +41,43 @@ describe("templateManagement", () => {
     const result = getPreferredTemplateDirectory(
       {
         ...DEFAULT_CONFIG,
-        templates: [{ name: "Default", path: "D:\\Templates\\_header-default.txt" }],
+        templates: [{ name: "Default", path: path.join(TEMPLATES_ROOT, "_header-default.txt") }],
       },
-      "D:\\Fallback"
+      FALLBACK_ROOT
     );
 
-    assert.strictEqual(result, "D:\\Templates");
+    assert.strictEqual(result, TEMPLATES_ROOT);
   });
 
   it("builds a unique template path when names collide", () => {
     const seen = new Set([
-      "D:\\Templates\\_header-ascii-galaxy.txt",
-      "D:\\Templates\\_header-ascii-galaxy-2.txt",
+      path.join(TEMPLATES_ROOT, "_header-ascii-galaxy.txt"),
+      path.join(TEMPLATES_ROOT, "_header-ascii-galaxy-2.txt"),
     ]);
 
     const result = resolveUniqueTemplatePath(
       "ASCII Galaxy",
       DEFAULT_CONFIG,
-      "D:\\Templates",
+      TEMPLATES_ROOT,
       (candidatePath) => seen.has(candidatePath)
     );
 
-    assert.strictEqual(result, "D:\\Templates\\_header-ascii-galaxy-3.txt");
+    assert.strictEqual(result, path.join(TEMPLATES_ROOT, "_header-ascii-galaxy-3.txt"));
   });
 
   it("builds the template search directories from configured paths plus the default root", () => {
     const result = getTemplateSearchDirectories(
       {
         ...DEFAULT_CONFIG,
-        templates: [{ name: "Default", path: "D:\\Templates\\_header-default.txt" }],
-        templateFile: "D:\\Templates\\_header-default.txt",
+        templates: [{ name: "Default", path: path.join(TEMPLATES_ROOT, "_header-default.txt") }],
+        templateFile: path.join(TEMPLATES_ROOT, "_header-default.txt"),
       },
-      "D:\\UserTemplates"
+      USER_TEMPLATES_ROOT
     );
 
     assert.deepStrictEqual(result, [
-      "D:\\Templates",
-      "D:\\UserTemplates",
+      TEMPLATES_ROOT,
+      USER_TEMPLATES_ROOT,
     ]);
   });
 
@@ -74,43 +85,46 @@ describe("templateManagement", () => {
     assert.deepStrictEqual(
       getEditableTemplateCandidates({
         ...DEFAULT_CONFIG,
-        templates: [{ name: "Default", path: "D:\\Templates\\_header-default.txt" }],
+        templates: [{ name: "Default", path: path.join(TEMPLATES_ROOT, "_header-default.txt") }],
       }),
-      [{ name: "Default", path: "D:\\Templates\\_header-default.txt" }]
+      [{ name: "Default", path: path.join(TEMPLATES_ROOT, "_header-default.txt") }]
     );
 
     assert.deepStrictEqual(
       getEditableTemplateCandidates({
         ...DEFAULT_CONFIG,
-        templateFile: "D:\\Templates\\_header-default.txt",
+        templateFile: path.join(TEMPLATES_ROOT, "_header-default.txt"),
       }),
-      [{ name: "Current Template", path: "D:\\Templates\\_header-default.txt" }]
+      [{ name: "Current Template", path: path.join(TEMPLATES_ROOT, "_header-default.txt") }]
     );
   });
 
   it("derives friendly names from discovered template files", () => {
     assert.strictEqual(
-      deriveTemplateNameFromFilePath("D:\\Templates\\_header-ascii-galaxy.txt"),
+      deriveTemplateNameFromFilePath(path.join(TEMPLATES_ROOT, "_header-ascii-galaxy.txt")),
       "Ascii Galaxy"
     );
     assert.strictEqual(
-      deriveTemplateNameFromFilePath("D:\\Templates\\_header.txt"),
+      deriveTemplateNameFromFilePath(path.join(TEMPLATES_ROOT, "_header.txt")),
       "Template"
     );
   });
 
   it("merges configured templates with discovered files without duplicates", () => {
+    const defaultTemplatePath = path.join(TEMPLATES_ROOT, "_header-default.txt");
+    const galaxyTemplatePath = path.join(TEMPLATES_ROOT, "_header-galaxy.txt");
+
     const result = mergeTemplateSources(
-      [{ name: "Default", path: "D:\\Templates\\_header-default.txt" }],
+      [{ name: "Default", path: defaultTemplatePath }],
       [
-        "D:\\Templates\\_header-default.txt",
-        "D:\\Templates\\_header-galaxy.txt",
+        defaultTemplatePath,
+        galaxyTemplatePath,
       ]
     );
 
     assert.deepStrictEqual(result, [
-      { name: "Default", path: "D:\\Templates\\_header-default.txt" },
-      { name: "Galaxy", path: "D:\\Templates\\_header-galaxy.txt" },
+      { name: "Default", path: defaultTemplatePath },
+      { name: "Galaxy", path: galaxyTemplatePath },
     ]);
   });
 
@@ -133,17 +147,17 @@ describe("templateManagement", () => {
     const result = buildUpdatedTemplateList(
       {
         ...DEFAULT_CONFIG,
-        templateFile: "D:\\Templates\\_header-default.txt",
+        templateFile: path.join(TEMPLATES_ROOT, "_header-default.txt"),
       },
       {
         name: "Galaxy",
-        path: "D:\\Templates\\_header-galaxy.txt",
+        path: path.join(TEMPLATES_ROOT, "_header-galaxy.txt"),
       }
     );
 
     assert.deepStrictEqual(result, [
-      { name: "Default", path: "D:\\Templates\\_header-default.txt" },
-      { name: "Galaxy", path: "D:\\Templates\\_header-galaxy.txt" },
+      { name: "Default", path: path.join(TEMPLATES_ROOT, "_header-default.txt") },
+      { name: "Galaxy", path: path.join(TEMPLATES_ROOT, "_header-galaxy.txt") },
     ]);
   });
 

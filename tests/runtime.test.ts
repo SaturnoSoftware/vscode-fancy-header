@@ -14,6 +14,10 @@ import {
   resolveTemplateFilePath,
 } from "../src/runtime";
 
+const PLATFORM_TEST_ROOT = process.platform === "win32"
+  ? "D:\\Projects\\repo"
+  : "/projects/repo";
+
 describe("format helpers", () => {
   it("formats dates as YYYY-MM-DD", () => {
     const date = new Date(2026, 4, 28);
@@ -50,17 +54,17 @@ describe("resolveAuthorInfo", () => {
 
   describe("template files", () => {
     it("resolves workspace and file directory tokens", () => {
-      const currentFilePath = "D:\\Projects\\repo\\src\\main.ts";
-      const workspaceFolderPath = "D:\\Projects\\repo";
+      const workspaceFolderPath = PLATFORM_TEST_ROOT;
+      const currentFilePath = path.join(workspaceFolderPath, "src", "main.ts");
 
       assert.strictEqual(
-        resolveTemplateFilePath("${workspaceFolder}\\templates\\header.txt", currentFilePath, workspaceFolderPath),
-        path.resolve("D:\\Projects\\repo\\templates\\header.txt")
+        resolveTemplateFilePath("${workspaceFolder}/templates/header.txt", currentFilePath, workspaceFolderPath),
+        path.resolve(workspaceFolderPath, "templates", "header.txt")
       );
 
       assert.strictEqual(
-        resolveTemplateFilePath("${fileDirname}\\header.txt", currentFilePath, workspaceFolderPath),
-        path.resolve("D:\\Projects\\repo\\src\\header.txt")
+        resolveTemplateFilePath("${fileDirname}/header.txt", currentFilePath, workspaceFolderPath),
+        path.resolve(workspaceFolderPath, "src", "header.txt")
       );
     });
 
@@ -76,7 +80,7 @@ describe("resolveAuthorInfo", () => {
 
       const lines = resolveConfiguredTemplateLines(currentFilePath, workspaceFolderPath, {
         ...DEFAULT_CONFIG,
-        templateFile: "${workspaceFolder}\\_header-template.txt",
+        templateFile: "${workspaceFolder}/_header-template.txt",
       });
 
       assert.deepStrictEqual(lines, ["Line 1", "", "Line 3"]);
@@ -90,7 +94,7 @@ describe("resolveAuthorInfo", () => {
       assert.throws(
         () => resolveConfiguredTemplateLines(currentFilePath, tempRoot, {
           ...DEFAULT_CONFIG,
-          templateFile: "${workspaceFolder}\\missing.txt",
+          templateFile: "${workspaceFolder}/missing.txt",
         }),
         /failed to read template file/
       );
@@ -114,11 +118,17 @@ describe("resolveAuthorInfo", () => {
 
 describe("git metadata helpers", () => {
   it("prefers the workspace folder name for project metadata", () => {
+    const workspaceRoot = process.platform === "win32"
+      ? "D:\\Projects\\saturnosoftware"
+      : "/projects/saturnosoftware";
+    const repoRoot = path.join(workspaceRoot, "repos_public", "Libs", "Saturno.VSCodeKit");
+    const filePath = path.join(repoRoot, "src", "EditorUtils.ts");
+
     assert.strictEqual(
       resolveProjectName(
-        "D:\\Projects\\saturnosoftware\\repos_public\\Libs\\Saturno.VSCodeKit\\src\\EditorUtils.ts",
-        "D:\\Projects\\saturnosoftware",
-        "D:\\Projects\\saturnosoftware\\repos_public\\Libs\\Saturno.VSCodeKit"
+        filePath,
+        workspaceRoot,
+        repoRoot
       ),
       "Saturno.VSCodeKit"
     );
