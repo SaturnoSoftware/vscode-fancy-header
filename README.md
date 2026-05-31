@@ -1,12 +1,22 @@
-# Saturno FancyHeader
+<p align="center">
+    <img src="res/images/icon.png" alt="Saturno FancyHeader" width="160">
+</p>
 
-[![VS Code](https://badgen.net/badge/vscode/%5E1.88.0/blue)](https://code.visualstudio.com/)
-[![License: GPL-3.0](https://badgen.net/badge/license/GPL--3.0/orange)](./LICENSE.txt)
-[![Tests: local suite](https://badgen.net/badge/tests/node%20suite/green)](./tests)
+<p align="center">
+    <a href="https://github.com/SaturnoSoftware/vscode-fancy-header/releases"><img src="https://badgen.net/github/release/SaturnoSoftware/vscode-fancy-header?cache=600" alt="latest release"></a>
+    <a href="https://github.com/SaturnoSoftware/vscode-fancy-header/commits"><img src="https://badgen.net/github/commits/SaturnoSoftware/vscode-fancy-header?cache=600" alt="commits"></a>
+    <a href="./LICENSE.txt"><img src="https://badgen.net/badge/license/GPL--3.0/blue" alt="License: GPL-3.0"></a>
+    <a href="./tests"><img src="https://badgen.net/badge/tests/CI%20verified/green" alt="Tests: CI verified"></a>
+    <a href="https://code.visualstudio.com/"><img src="https://badgen.net/badge/platform/VS%20Code%20%5E1.88.0/blue" alt="Platform"></a>
+</p>
 
-**Insert consistent file headers with one command.** Language-aware, configurable, and packaged with the Saturno VS Code repo contract.
+<p align="center">
+  <b>Insert consistent file headers with one command.</b> Language-aware, configurable, and ready for real project templates.
+  <br>
+  <br>
+</p>
 
-Saturno FancyHeader adds a file header at the top of the current document using the active language comment syntax plus file, project, date, and author metadata.
+**Saturno FancyHeader** is a VS Code extension that inserts structured file headers using the active language comment syntax plus file, project, date, and author metadata. It gives source files a clean, repeatable header without hand-written boilerplate.
 
 Maintained by [Saturno.Software](https://saturno.software/).
 
@@ -17,7 +27,7 @@ Maintained by [Saturno.Software](https://saturno.software/).
 ### Install from VSIX
 
 ```bash
-code --install-extension saturno-fancy-header-1.1.0.vsix
+code --install-extension saturno-fancy-header-1.1.2.vsix
 ```
 
 ### Use
@@ -26,17 +36,18 @@ code --install-extension saturno-fancy-header-1.1.0.vsix
 2. Open Command Palette (`Ctrl+Shift+P`)
 3. Run `Saturno: Add Header`
 
-Template management commands:
+Optional template commands:
 
 - `Saturno: New Header Template`
 - `Saturno: Edit Header Templates`
 
 **Default output:**
+
 ```text
 // ------------------------------------------------------------------------------
 //   File      : example.ts
 //   Project   : my-project
-//   Date      : 2026-05-28
+//   Date      : 2026-05-31
 //   Copyright : 2026
 //   Copyright : Mateus <mateus@example.com>
 // ------------------------------------------------------------------------------
@@ -46,32 +57,63 @@ Template management commands:
 
 ## Features
 
-- **Language-aware** -- Uses VS Code language configuration to choose the right comment syntax
-- **Metadata-driven** -- Inserts file name, project name, date, and author information
-- **Configurable** -- Header template lines, editable template files, border fill character, width, and author overrides
-- **Saturno repo contract** -- Build/package/test flow matches other Saturno VS Code extensions
+- **Language-Aware** -- Uses the active VS Code language comment syntax automatically
+- **Metadata-Driven** -- Inserts file name, project name, date, and author information
+- **Template-Based** -- Supports inline template lines, external template files, and named template pickers
+- **Command Palette Friendly** -- Create, edit, and apply templates without leaving the editor
+- **Cross-Platform** -- Works on Windows, macOS, and Linux with platform-correct template paths
+- **Zero Config** -- Works out of the box with sensible defaults
+
+---
+
+## Installation
+
+### From GitHub Release
+
+Download the latest `.vsix` from [Releases](https://github.com/SaturnoSoftware/vscode-fancy-header/releases), then install it:
+
+```bash
+code --install-extension saturno-fancy-header-1.1.2.vsix
+```
+
+### From Source
+
+```bash
+git clone https://github.com/SaturnoSoftware/vscode-fancy-header
+cd vscode-fancy-header
+git submodule update --init --recursive
+npm install
+npm run package
+code --install-extension __DIST/*.vsix
+```
+
+### Requirements
+
+- VS Code ^1.88.0
 
 ---
 
 ## Configuration
 
-All settings are available in VS Code Settings UI under **Saturno FancyHeader**, or in `settings.json`:
+All settings are available in the VS Code Settings UI under **Saturno FancyHeader**, or in `settings.json`.
+
+**Minimal template-file setup:**
+
+```json
+{
+  "saturno-fancy-header.templateFile": "${workspaceFolder}/_header-template.txt"
+}
+```
+
+If `templateFile` is set, FancyHeader reads the template body from that file and **does not require** `templateLines` to be configured as well.
+
+**Advanced overrides (optional):**
 
 ```json
 {
   "saturno-fancy-header.lineWidth": 80,
   "saturno-fancy-header.fillChar": "-",
-  "saturno-fancy-header.templateFile": "${workspaceFolder}\\_header-template.txt",
-  "saturno-fancy-header.templates": [
-    {
-      "name": "Default",
-      "path": "${workspaceFolder}\\_header-template.txt"
-    },
-    {
-      "name": "Stars",
-      "path": "${workspaceFolder}\\_header-stars.txt"
-    }
-  ],
+  "saturno-fancy-header.templateFile": "${workspaceFolder}/_header-template.txt",
   "saturno-fancy-header.authorName": "",
   "saturno-fancy-header.authorEmail": "",
   "saturno-fancy-header.templateLines": [
@@ -88,11 +130,11 @@ All settings are available in VS Code Settings UI under **Saturno FancyHeader**,
 |---------|---------|-------------|
 | `lineWidth` | `80` | Total width of generated header lines |
 | `fillChar` | `"-"` | Border fill character |
-| `templateFile` | `""` | Optional editable text file used as the template body |
+| `templateFile` | `""` | Optional external template file |
 | `templates` | `[]` | Optional named template files shown in a picker |
 | `authorName` | `""` | Optional author name override |
 | `authorEmail` | `""` | Optional author email override |
-| `templateLines` | default list | Header body lines with placeholders |
+| `templateLines` | default list | Inline template body with placeholders |
 
 Supported placeholders:
 
@@ -103,75 +145,49 @@ Supported placeholders:
 - `USER_NAME`
 - `USER_EMAIL`
 
-`templateFile` supports:
+### Template File Example
 
-- absolute paths
-- paths relative to the current workspace
-- `${workspaceFolder}`
-- `${fileDirname}`
-- `~`
-
-### Editable Template File Example
-
-Put this in a file like `_header-template.txt`:
+Create `_header-template.txt`:
 
 ```text
-                     *       +
-               '                  |
-           ()    .-.,="``"=.    - o -
-                 '=/_       \\     |
-              *   |  '=._    |
-                   \\     `=./`,        '
-                .   '=.__.=' `='      *
-
   File      : ${FILENAME}
   Project   : ${PROJECT}
   Date      : ${DATE}
-  Copyright : ${YEAR}
   Author    : ${USER_NAME} <${USER_EMAIL}>
 ```
 
-Then point the extension to it in `settings.json`:
+Then point `templateFile` to it.
 
-```json
-{
-  "saturno-fancy-header.templateFile": "${workspaceFolder}\\_header-template.txt"
-}
-```
+FancyHeader also auto-discovers template files named `_header-*.txt` in the same template directory and in the default user template folder, so if you add a new file there it is picked up automatically in the template picker.
 
-When `templateFile` is set, it overrides `templateLines`.
+If you define `templates`, FancyHeader merges those named entries with the discovered files and opens a Quick Pick when more than one template is available.
 
-### Multiple Templates With A Picker
+---
 
-If you want more than one template, configure `templates`:
+## Commands
 
-```json
-{
-  "saturno-fancy-header.templates": [
-    {
-      "name": "Default",
-      "path": "${workspaceFolder}\\_header-template.txt"
-    },
-    {
-      "name": "ASCII Galaxy",
-      "path": "${workspaceFolder}\\_header-galaxy.txt"
-    },
-    {
-      "name": "Minimal",
-      "path": "${workspaceFolder}\\_header-minimal.txt"
-    }
-  ]
-}
-```
+| Command | Title | Description |
+|---------|-------|-------------|
+| `saturno-fancy-header.addHeader` | `Saturno: Add Header` | Insert a header with the active template and language comment syntax |
+| `saturno-fancy-header.newTemplate` | `Saturno: New Header Template` | Create a new template file, register it, and open it |
+| `saturno-fancy-header.editTemplates` | `Saturno: Edit Header Templates` | Pick and open an existing template file |
 
-Then run **`Saturno: Add Header`**. If more than one named template exists, the command opens a Quick Pick so you can choose the template before the header is inserted.
+---
 
-### Easier Template Maintenance
+## How It Works
 
-Use:
+FancyHeader reads VS Code language configuration to determine the correct line comment syntax for the active document, then fills the selected template with:
 
-- **`Saturno: New Header Template`** to create a new template file, register it in user settings, and open it for editing
-- **`Saturno: Edit Header Templates`** to pick and open an existing template file directly
+- current file name
+- workspace or project name
+- current date and year
+- author name and email from settings, Git config, or local user information
+
+Template selection follows this order:
+
+1. named template chosen from `templates`
+2. external file from `templateFile`
+3. inline `templateLines`
 
 ---
 
@@ -185,36 +201,50 @@ npm run build
 npm run package
 ```
 
-### Saturno CICD Wrappers
-
-```powershell
-git submodule update --init --recursive
- 
-pwsh -NoLogo -NoProfile -File .\Saturno.CICD\test.ps1 -ProjectRoot .
-pwsh -NoLogo -NoProfile -File .\Saturno.CICD\build.ps1 -ProjectRoot . -BuildNumber 0
-pwsh -NoLogo -NoProfile -File .\Saturno.CICD\package.ps1 -ProjectRoot . -BuildNumber 0
-```
-
 ---
 
-## Repository Layout
+## Contributing
 
-```text
-mdheader/
-├── src/                    Extension source
-├── libs/                   Shared VS Code utilities (Saturno.VSCodeKit)
-├── tests/                  Node.js test suite
-├── res/                    Extension icon and resources
-├── Scripts/                Build and VSIX packaging
-├── Saturno.CICD/           Shared CI/CD contract
-├── _SATURNO/               Repo-local documentation
-├── out/                    Compiled JavaScript (generated)
-├── __BUILD/                Staged build output (generated)
-└── __DIST/                 Packaged .vsix artifact (generated)
-```
+Contributions welcome! Please:
+
+- follow existing code style
+- add tests for new features
+- submit pull requests against `main`
 
 ---
 
 ## License
 
 GPL-3.0 -- See [LICENSE.txt](./LICENSE.txt) for details.
+
+Maintained by [Saturno.Software](https://saturno.software/).
+
+---
+
+## FAQ
+
+**Q: Does it work with different programming languages?**  
+A: Yes. FancyHeader uses the active VS Code language comment syntax, so it works anywhere VS Code exposes a line-comment style.
+
+**Q: Can I use my own header template file?**  
+A: Yes. Set `saturno-fancy-header.templateFile` to a text file, or configure multiple named templates with `saturno-fancy-header.templates`.
+
+**Q: Where do author name and email come from?**  
+A: From the extension settings first, then Git config when available, then local user information as a fallback.
+
+**Q: How do I install without a marketplace listing?**  
+A: Download or build the `.vsix`, then run `code --install-extension path-to-file.vsix`.
+
+---
+
+## Links
+
+- [GitHub Repository](https://github.com/SaturnoSoftware/vscode-fancy-header)
+- [GitHub Releases](https://github.com/SaturnoSoftware/vscode-fancy-header/releases)
+- [Issues](https://github.com/SaturnoSoftware/vscode-fancy-header/issues)
+- [Saturno.Software](https://saturno.software/)
+
+---
+<p align="center">
+  <b>Made with &lt;3 by Saturno.Software</b>
+</p>

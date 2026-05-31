@@ -2,7 +2,7 @@
   "name": "saturno-fancy-header",
   "displayName": "Saturno FancyHeader",
   "description": "Insert configurable file header comments with project, date, and author metadata",
-  "publisher": "saturno-software",
+  "publisher": "SaturnoSoftware",
   "repository": {
     "type": "git",
     "url": "https://github.com/SaturnoSoftware/vscode-fancy-header.git"

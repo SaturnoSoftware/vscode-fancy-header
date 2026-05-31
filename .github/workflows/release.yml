@@ -42,6 +42,7 @@ jobs:
     needs: [validate]
     outputs:
       release_name: ${{ steps.names.outputs.release_name }}
+      release_dir: ${{ steps.package.outputs.release_dir }}
       archive_path: ${{ steps.names.outputs.archive_path }}
       artifact_name: ${{ steps.names.outputs.artifact_name }}
 
@@ -76,3 +77,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: ./Saturno.CICD/release/publish-github-release.ps1 -Tag $env:GITHUB_REF_NAME -ArchivePath "${{ steps.names.outputs.archive_path }}"
+
+      - name: Publish Visual Studio Marketplace extension
+        shell: pwsh
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:VSCE_PAT)) {
+            Write-Host "VSCE_PAT not configured; skipping Visual Studio Marketplace publish."
+            exit 0
+          }
+          ./Scripts/publish-marketplace.ps1 -ProjectRoot $PWD -PackageOutputDir "${{ steps.package.outputs.release_dir }}"
