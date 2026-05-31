@@ -140,10 +140,7 @@ function resolveFileDate(filePath: string): Date {
 export function findGitRootFromFilePath(filePath: string): string | null {
   let currentDirectory = path.dirname(path.resolve(filePath));
 
-  while (true) {
-    if (fs.existsSync(path.join(currentDirectory, ".git"))) {
-      return currentDirectory;
-    }
+  while (!fs.existsSync(path.join(currentDirectory, ".git"))) {
 
     const parentDirectory = path.dirname(currentDirectory);
     if (parentDirectory === currentDirectory) {
@@ -152,6 +149,8 @@ export function findGitRootFromFilePath(filePath: string): string | null {
 
     currentDirectory = parentDirectory;
   }
+
+  return currentDirectory;
 }
 
 // -----------------------------------------------------------------------------

@@ -7,6 +7,8 @@ tests/**
 Scripts/**
 Saturno.CICD/**
 _SATURNO/**
+Saturno.VSCodeFancyHeader.Internal/**
+Saturno.VSCodeFancyHeader.Interval/**
 __BUILD/**
 __DIST/**
 .gitignore
