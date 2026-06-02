@@ -151,6 +151,9 @@
   "dependencies": {
     "json5": "^2.2.3"
   },
+  "vsce": {
+    "baseImagesUrl": "https://raw.githubusercontent.com/SaturnoSoftware/vscode-fancy-header/main/"
+  },
   "saturno": {
     "cicd": {
       "artifactPrefix": "Saturno.VSCode.FancyHeader",
