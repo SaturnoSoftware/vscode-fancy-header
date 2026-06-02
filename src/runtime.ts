@@ -159,7 +159,9 @@ export function resolveProjectName(
   gitRoot: string | null,
   workspaceFolderPath: string | null
 ): string {
-  return path.basename(workspaceFolderPath ?? gitRoot ?? path.dirname(filePath));
+  // Prefer git root over workspace folder for more accurate project name
+  // (workspace might be a parent monorepo directory)
+  return path.basename(gitRoot ?? workspaceFolderPath ?? path.dirname(filePath));
 }
 
 // -----------------------------------------------------------------------------

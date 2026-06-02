@@ -1,3 +1,22 @@
+// -------------------------------------------------------------------------- //
+//                               *       +                                    //
+//                         '                  |                               //
+//                     ()    .-.,="``"=.    - o -                             //
+//                           '=/_       \\     |                              //
+//                        *   |  '=._    |                                    //
+//                             \\     `=./`,        '                         //
+//                          .   '=.__.=' `='      *                           //
+//                                                                            //
+//                                                                            //
+// File      : extension.ts                                                   //
+// Project   : saturnosoftware                                                //
+// Date      : 2025-03-05                                                     //
+// Copyright : Saturno Software - 2025 - 2026                                 //
+// Author    : mateusdigital <hello@mateus.digital>                           //
+// -------------------------------------------------------------------------- //
+
+
+
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";

@@ -117,7 +117,7 @@ describe("resolveAuthorInfo", () => {
 });
 
 describe("git metadata helpers", () => {
-  it("prefers the workspace folder name for project metadata", () => {
+  it("prefers git root over workspace folder for project metadata", () => {
     const workspaceRoot = process.platform === "win32"
       ? "D:\\Projects\\saturnosoftware"
       : "/projects/saturnosoftware";
@@ -127,8 +127,8 @@ describe("git metadata helpers", () => {
     assert.strictEqual(
       resolveProjectName(
         filePath,
-        workspaceRoot,
-        repoRoot
+        repoRoot,        // gitRoot (more specific)
+        workspaceRoot    // workspaceFolderPath (parent monorepo)
       ),
       "Saturno.VSCodeKit"
     );

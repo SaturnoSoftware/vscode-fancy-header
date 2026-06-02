@@ -367,19 +367,19 @@ describe("resolveProjectName - edge cases", () => {
     assert.strictEqual(result, "path");
   });
 
-  it("prefers workspace folder over git root", () => {
+  it("prefers git root over workspace folder", () => {
     const filePath = process.platform === "win32"
-      ? "D:\\projects\\myworkspace\\src\\file.ts"
-      : "/projects/myworkspace/src/file.ts";
+      ? "D:\\projects\\monorepo\\packages\\app\\src\\file.ts"
+      : "/projects/monorepo/packages/app/src/file.ts";
     const gitRoot = process.platform === "win32"
-      ? "D:\\projects\\myworkspace"
-      : "/projects/myworkspace";
+      ? "D:\\projects\\monorepo\\packages\\app"
+      : "/projects/monorepo/packages/app";
     const workspace = process.platform === "win32"
-      ? "D:\\projects\\myworkspace"
-      : "/projects/myworkspace";
+      ? "D:\\projects\\monorepo"
+      : "/projects/monorepo";
 
     const result = resolveProjectName(filePath, gitRoot, workspace);
-    assert.strictEqual(result, "myworkspace");
+    assert.strictEqual(result, "app");
   });
 
   it("handles workspace folder with Unicode name", () => {
