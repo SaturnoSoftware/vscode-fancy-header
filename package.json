@@ -134,7 +134,7 @@
     "compile": "pwsh -NoLogo -NoProfile -Command \"if (Test-Path -LiteralPath ./out) { Remove-Item -LiteralPath ./out -Recurse -Force }\" && tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src libs tests --ext ts",
-    "test": "npm run compile && tsc -p tests/tsconfig.json && node --test out/tests/*.test.js",
+    "test": "npm run compile && tsc -p tests/tsconfig.json && tsc -p libs/Saturno.VSCodeKit/tests/tsconfig.json && node --test out/tests/*.test.js out/libs/Saturno.VSCodeKit/tests/*.test.js",
     "build": "npm run lint && npm run compile && pwsh -NoLogo -NoProfile -File ./Scripts/build.ps1 -ProjectRoot . -BuildOutputDir __BUILD/_staging",
     "package": "pwsh -NoLogo -NoProfile -File ./Scripts/package-vsix.ps1",
     "vscode:prepublish": "npm run compile"
