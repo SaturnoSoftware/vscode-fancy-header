@@ -36,6 +36,11 @@ code --install-extension saturno-fancy-header-1.1.2.vsix
 2. Open Command Palette (`Ctrl+Shift+P`)
 3. Run `Saturno: Add Header`
 
+
+<img width="1141" height="230" alt="Header(SaturnFH)" src="https://github.com/user-attachments/assets/f481f528-ed21-40bc-b825-60574c02d951" />
+
+
+
 Optional template commands:
 
 - `Saturno: New Header Template`
