@@ -1,4 +1,4 @@
-import { CommentSyntax } from "./types";
+import { CommentSyntax } from "../libs/Saturno.VSCodeKit/src/Types";
 
 export { CommentSyntax };
 
