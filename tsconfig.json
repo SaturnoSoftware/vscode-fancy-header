@@ -9,7 +9,8 @@
     "rootDir": "./",
     "baseUrl": ".",
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node", "vscode"]
   },
   "include": ["src"],
   "exclude": ["node_modules", ".vscode-test", "tests"]
